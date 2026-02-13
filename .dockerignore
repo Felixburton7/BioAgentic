@@ -1,0 +1,14 @@
+.git
+.venv
+venv
+__pycache__
+*.pyc
+.env
+.DS_Store
+frontend/
+frontend/node_modules/
+frontend/.next/
+old_backend/
+*.egg-info/
+dist/
+build/
