@@ -11,6 +11,8 @@ build/
 .env
 .venv/
 venv/
+BAvenv/
+
 
 # IDE
 .vscode/
