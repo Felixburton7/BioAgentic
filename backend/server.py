@@ -13,6 +13,7 @@ from datetime import datetime
 from typing import List, Optional
 
 # Debug: log startup progress
+print("BioAgentic server process started...", file=sys.stderr)
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 logger = logging.getLogger("bioagentic")
 logger.info("Starting BioAgentic server...")
