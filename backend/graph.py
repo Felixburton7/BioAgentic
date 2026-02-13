@@ -55,5 +55,17 @@ def build_graph(debate_rounds: int = DEFAULT_DEBATE_ROUNDS):
     return graph
 
 
-# Pre-built graph instance for the default configuration
-default_graph = build_graph()
+# Lazy-loaded graph instance to avoid slow startup on Railway
+_default_graph = None
+
+
+def get_default_graph():
+    """Return (and cache) a default graph instance."""
+    global _default_graph
+    if _default_graph is None:
+        _default_graph = build_graph()
+    return _default_graph
+
+
+# Keep backward compat – but prefer get_default_graph()
+default_graph = None  # built lazily via get_default_graph()
