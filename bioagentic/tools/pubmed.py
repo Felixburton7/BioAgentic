@@ -1,0 +1,146 @@
+"""
+PubMed E-utilities integration.
+Two-step search: esearch (find PMIDs) → efetch (get abstracts).
+Replaces the mock fetch_papers() from backend/main.py.
+"""
+
+import requests
+import xml.etree.ElementTree as ET
+from ..config import MAX_API_TIMEOUT, NCBI_API_KEY
+
+EUTILS_BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
+
+
+def fetch_papers(target: str, max_results: int = 8) -> str:
+    """
+    Search PubMed for recent papers matching a biotech target.
+
+    Step 1: esearch to get PMIDs
+    Step 2: efetch to retrieve abstracts in XML
+
+    Args:
+        target: Search term (e.g. "KRAS G12C inhibitor resistance").
+        max_results: Number of papers to retrieve.
+
+    Returns:
+        Formatted markdown string with paper summaries.
+    """
+    try:
+        # --- Step 1: Search for PMIDs ---
+        search_params = {
+            "db": "pubmed",
+            "term": target,
+            "retmax": max_results,
+            "retmode": "json",
+            "sort": "relevance",
+        }
+        if NCBI_API_KEY:
+            search_params["api_key"] = NCBI_API_KEY
+
+        search_resp = requests.get(
+            f"{EUTILS_BASE}/esearch.fcgi",
+            params=search_params,
+            timeout=MAX_API_TIMEOUT,
+        )
+        search_resp.raise_for_status()
+        search_data = search_resp.json()
+
+        id_list = search_data.get("esearchresult", {}).get("idlist", [])
+        total_count = search_data.get("esearchresult", {}).get("count", "0")
+
+        if not id_list:
+            return f"**No PubMed papers found for '{target}'.** Try different keywords."
+
+        # --- Step 2: Fetch abstracts ---
+        fetch_params = {
+            "db": "pubmed",
+            "id": ",".join(id_list),
+            "retmode": "xml",
+            "rettype": "abstract",
+        }
+        if NCBI_API_KEY:
+            fetch_params["api_key"] = NCBI_API_KEY
+
+        fetch_resp = requests.get(
+            f"{EUTILS_BASE}/efetch.fcgi",
+            params=fetch_params,
+            timeout=MAX_API_TIMEOUT,
+        )
+        fetch_resp.raise_for_status()
+
+        # --- Parse XML ---
+        return _parse_pubmed_xml(fetch_resp.text, total_count, target)
+
+    except requests.Timeout:
+        return f"**PubMed timeout** for '{target}'. Try again or use a NCBI API key for higher limits."
+    except requests.RequestException as e:
+        return f"**PubMed API error**: {e}"
+    except ET.ParseError as e:
+        return f"**Error parsing PubMed XML**: {e}"
+
+
+def _parse_pubmed_xml(xml_text: str, total_count: str, target: str) -> str:
+    """Parse PubMed efetch XML into formatted markdown."""
+    root = ET.fromstring(xml_text)
+    articles = root.findall(".//PubmedArticle")
+
+    if not articles:
+        return f"**No abstracts available** for '{target}' papers."
+
+    summary = f"**{total_count} PubMed results for '{target}'** (showing {len(articles)}):\n\n"
+
+    for article in articles:
+        medline = article.find(".//MedlineCitation")
+        if medline is None:
+            continue
+
+        # PMID
+        pmid_elem = medline.find("PMID")
+        pmid = pmid_elem.text if pmid_elem is not None else "N/A"
+
+        # Title
+        title_elem = medline.find(".//ArticleTitle")
+        title = title_elem.text if title_elem is not None else "Untitled"
+        title = (title[:150] + "...") if title and len(title) > 150 else (title or "Untitled")
+
+        # Authors (first 3)
+        authors = []
+        for author in medline.findall(".//Author")[:3]:
+            last = author.find("LastName")
+            init = author.find("Initials")
+            if last is not None and last.text:
+                name = last.text
+                if init is not None and init.text:
+                    name += f" {init.text}"
+                authors.append(name)
+        author_str = ", ".join(authors)
+        if len(medline.findall(".//Author")) > 3:
+            author_str += " et al."
+
+        # Year
+        year_elem = medline.find(".//PubDate/Year")
+        year = year_elem.text if year_elem is not None else "N/A"
+
+        # Journal
+        journal_elem = medline.find(".//Journal/Title")
+        journal = journal_elem.text if journal_elem is not None else ""
+        journal = (journal[:60] + "...") if journal and len(journal) > 60 else (journal or "")
+
+        # Abstract
+        abstract_parts = medline.findall(".//AbstractText")
+        if abstract_parts:
+            abstract = " ".join(
+                (part.text or "") for part in abstract_parts
+            )
+            abstract = (abstract[:300] + "...") if len(abstract) > 300 else abstract
+        else:
+            abstract = "No abstract available."
+
+        summary += (
+            f"- **{title}** (PMID: {pmid}, {year})\n"
+            f"  Authors: {author_str}\n"
+            f"  Journal: {journal}\n"
+            f"  Abstract: {abstract}\n\n"
+        )
+
+    return summary
