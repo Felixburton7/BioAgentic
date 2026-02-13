@@ -103,6 +103,7 @@ export default function Home() {
   const [error, setError] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [pendingPrompt, setPendingPrompt] = useState("");
+  const [researchActive, setResearchActive] = useState(false);
 
   // Conversation history — stored in state, persists within session
   const [conversations, setConversations] = useState([]);
@@ -137,6 +138,7 @@ export default function Home() {
     setError("");
     setIsStreaming(false);
     setActiveConversationId(null);
+    setResearchActive(false);
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
@@ -154,6 +156,9 @@ export default function Home() {
       setError("");
       setIsStreaming(false);
       setActiveConversationId(id);
+      // Show research view if conversation has any data
+      const hasData = (conv.messages && conv.messages.length > 0) || conv.brief || (conv.traces && conv.traces.length > 0);
+      setResearchActive(hasData);
     },
     [conversations]
   );
@@ -163,6 +168,7 @@ export default function Home() {
     ({ target, rounds }) => {
       handleReset();
       setIsStreaming(true);
+      setResearchActive(true);
 
       // Create new conversation entry
       const convId = Date.now().toString();
@@ -325,7 +331,7 @@ export default function Home() {
     return <PasswordGate onAuth={() => setAuthed(true)} />;
   }
 
-  const showHome = !isStreaming && messages.length === 0 && !brief;
+  const showHome = !researchActive;
 
   return (
     <div className="app-layout">
