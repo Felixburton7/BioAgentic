@@ -530,8 +530,15 @@ body {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.3;
+  }
 }
 
 /* ================================================================
@@ -814,6 +821,7 @@ body {
     opacity: 0;
     transform: translateY(4px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1329,7 +1337,9 @@ body {
 }
 
 @keyframes fadeIn {
-  to { opacity: 1; }
+  to {
+    opacity: 1;
+  }
 }
 
 .agent-card-header {
@@ -1375,14 +1385,37 @@ body {
   flex-shrink: 0;
 }
 
-.agent-badge-dot.analyzer { background: var(--purple); }
-.agent-badge-dot.trials { background: var(--teal); }
-.agent-badge-dot.literature { background: var(--amber); }
-.agent-badge-dot.hypothesis { background: #2383e2; }
-.agent-badge-dot.advocate { background: var(--green); }
-.agent-badge-dot.skeptic { background: var(--red); }
-.agent-badge-dot.mediator { background: var(--amber); }
-.agent-badge-dot.synthesizer { background: var(--purple); }
+.agent-badge-dot.analyzer {
+  background: var(--purple);
+}
+
+.agent-badge-dot.trials {
+  background: var(--teal);
+}
+
+.agent-badge-dot.literature {
+  background: var(--amber);
+}
+
+.agent-badge-dot.hypothesis {
+  background: #2383e2;
+}
+
+.agent-badge-dot.advocate {
+  background: var(--green);
+}
+
+.agent-badge-dot.skeptic {
+  background: var(--red);
+}
+
+.agent-badge-dot.mediator {
+  background: var(--amber);
+}
+
+.agent-badge-dot.synthesizer {
+  background: var(--purple);
+}
 
 .agent-timestamp {
   font-size: 11px;
@@ -1470,7 +1503,9 @@ body {
   letter-spacing: -0.3px;
 }
 
-.report-body h2:first-child { margin-top: 0; }
+.report-body h2:first-child {
+  margin-top: 0;
+}
 
 .report-body h3 {
   font-size: 18px;
@@ -1606,7 +1641,9 @@ body {
   flex-shrink: 0;
 }
 
-.trace-message { flex: 1; }
+.trace-message {
+  flex: 1;
+}
 
 .trace-duration {
   display: inline-flex;
@@ -1658,13 +1695,28 @@ body {
   margin-bottom: var(--space-sm);
 }
 
-.skeleton-line.short { width: 30%; }
-.skeleton-line.medium { width: 60%; }
-.skeleton-line.long { width: 85%; }
+.skeleton-line.short {
+  width: 30%;
+}
+
+.skeleton-line.medium {
+  width: 60%;
+}
+
+.skeleton-line.long {
+  width: 85%;
+}
 
 @keyframes shimmer {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
 }
 
 /* ================================================================
@@ -1681,7 +1733,9 @@ body {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ================================================================
@@ -1793,11 +1847,164 @@ body {
 }
 
 /* ================================================================
+   Sidebar Toggle Button
+   ================================================================ */
+
+.sidebar-toggle-btn {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 250;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+}
+
+.sidebar-toggle-btn:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.sidebar-toggle-btn.open {
+  left: calc(var(--sidebar-width) - 46px);
+}
+
+/* ================================================================
+   File Tags
+   ================================================================ */
+
+.file-tag {
+  background: var(--teal-subtle) !important;
+  border-color: rgba(42, 138, 122, 0.25) !important;
+  color: #1a5c50 !important;
+}
+
+.file-size {
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+/* ================================================================
+   Mention Popup Header
+   ================================================================ */
+
+.mention-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--border);
+}
+
+.mention-header-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.mention-header-hint {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.mention-item.selected {
+  background: var(--accent-olive-bg);
+}
+
+.mention-item-check {
+  font-size: 14px;
+  color: var(--green);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ================================================================
+   Home / Active Research Layout
+   ================================================================ */
+
+.home-form-section {
+  padding-top: var(--space-3xl);
+  margin-bottom: var(--space-xl);
+}
+
+.active-research-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+/* ================================================================
+   Sidebar Empty State
+   ================================================================ */
+
+.sidebar-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-2xl) var(--space-md);
+  text-align: center;
+  color: var(--text-faint);
+}
+
+.sidebar-empty svg {
+  opacity: 0.4;
+}
+
+.sidebar-empty p {
+  font-size: 13px;
+  margin: 0;
+}
+
+.sidebar-empty-hint {
+  font-size: 11px !important;
+  color: var(--text-faint) !important;
+}
+
+/* Sidebar task item — now a button */
+.sidebar-task-item {
+  width: 100%;
+  border: none;
+  font-family: inherit;
+}
+
+.sidebar-task-item.active {
+  background: var(--bg-hover);
+}
+
+.sidebar-task-dot.running {
+  background: var(--amber);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.sidebar-task-dot.done {
+  background: var(--green);
+}
+
+.sidebar-task-dot.error {
+  background: var(--red);
+}
+
+/* ================================================================
    Responsive
    ================================================================ */
 
 @media (max-width: 768px) {
   .sidebar {
+    display: none;
+  }
+
+  .sidebar-toggle-btn {
     display: none;
   }
 
@@ -1809,23 +2016,8 @@ body {
     padding: var(--space-lg) var(--space-md);
   }
 
-  .hero h1 {
-    font-size: 28px;
-  }
-
-  .prompt-cards,
-  .workflow-cards {
+  .prompt-cards {
     grid-template-columns: 1fr;
-  }
-
-  .category-pills {
-    gap: 6px;
-  }
-
-  .form-specs-bar {
-    font-size: 10px;
-    gap: 4px;
-    padding: 6px var(--space-md);
   }
 
   .report-body {
@@ -1838,17 +2030,7 @@ body {
 }
 
 @media (max-width: 480px) {
-  .hero-greeting {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-sm);
-  }
-
   .prompt-cards {
-    grid-template-columns: 1fr;
-  }
-
-  .workflow-cards {
     grid-template-columns: 1fr;
   }
 
