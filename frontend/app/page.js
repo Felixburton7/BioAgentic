@@ -42,7 +42,7 @@ function PasswordGate({ onAuth }) {
     setError("");
     try {
       const r = await fetch(
-        "/auth",
+        `${process.env.NEXT_PUBLIC_API_URL || ""}/auth`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -186,7 +186,9 @@ export default function Home() {
       setConversations((prev) => [newConv, ...prev]);
       setActiveConversationId(convId);
 
-      fetch("/research/stream", {
+      const API = process.env.NEXT_PUBLIC_API_URL || "";
+
+      fetch(`${API}/research/stream`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ target, rounds }),
