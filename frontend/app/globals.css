@@ -607,9 +607,10 @@ body {
   background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: var(--radius-2xl);
-  overflow: hidden;
+  overflow: visible;
   box-shadow: var(--shadow-input);
   transition: box-shadow var(--transition-normal), border-color var(--transition-normal);
+  position: relative;
 }
 
 .research-form:focus-within {
@@ -803,17 +804,29 @@ body {
 
 .rounds-dropdown-menu {
   position: absolute;
-  bottom: 100%;
+  top: 100%;
   right: 0;
-  width: 180px;
-  margin-bottom: 6px;
+  width: 220px;
+  margin-top: 6px;
   background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-popup);
   overflow: hidden;
   z-index: 300;
-  animation: slideUp 0.15s ease;
+  animation: slideDown 0.15s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes slideUp {
@@ -896,19 +909,19 @@ body {
 
 .mention-popup {
   position: absolute;
-  bottom: 100%;
+  top: 100%;
   left: 0;
   right: 0;
-  margin-bottom: 4px;
+  margin-top: 4px;
   background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-popup);
   z-index: 500;
-  max-height: 400px;
+  max-height: 320px;
   display: flex;
   flex-direction: column;
-  animation: slideUp 0.15s ease;
+  animation: slideDown 0.15s ease;
   overflow: hidden;
 }
 
@@ -1934,6 +1947,15 @@ body {
 .home-form-section {
   padding-top: var(--space-3xl);
   margin-bottom: var(--space-xl);
+}
+
+.home-greeting {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  color: var(--text-primary);
+  margin-bottom: var(--space-lg);
+  line-height: 1.1;
 }
 
 .active-research-header {
