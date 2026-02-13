@@ -10,6 +10,6 @@ RUN pip install --no-cache-dir .
 COPY backend/ ./backend/
 
 # Railway sets PORT env var automatically
-EXPOSE 8000
+# EXPOSE 8000 (Removed to avoid conflict with Railway dynamic port)
 
 CMD ["python", "-m", "backend.server"]
