@@ -96,9 +96,9 @@ def _format_log(agents_log: list) -> List[AgentMessage]:
 # ---------------------------------------------------------------------------
 
 @app.post("/research", response_model=ResearchResponse)
-def run_research(req: ResearchRequest):
+async def run_research(req: ResearchRequest):
     """
-    Run the full research pipeline synchronously.
+    Run the full research pipeline asynchronously.
     Returns the complete analysis including hypotheses, debate, and brief.
     """
     graph = build_graph(debate_rounds=req.rounds or DEFAULT_DEBATE_ROUNDS)
@@ -107,7 +107,7 @@ def run_research(req: ResearchRequest):
     thread_id = str(uuid.uuid4())
 
     try:
-        result = graph.invoke(
+        result = await graph.ainvoke(
             initial_state,
             config={"configurable": {"thread_id": thread_id}},
         )
@@ -124,19 +124,18 @@ def run_research(req: ResearchRequest):
 
 
 @app.post("/research/stream")
-def stream_research(req: ResearchRequest):
+async def stream_research(req: ResearchRequest):
     """
     Run the pipeline with SSE streaming — yields agent outputs in real-time.
-    Uses LangGraph's built-in graph.stream() instead of the broken
-    graph.get_node() pattern from backend/main.py.
+    Uses LangGraph's built-in graph.astream() for async node compatibility.
     """
-    def event_generator():
+    async def event_generator():
         graph = build_graph(debate_rounds=req.rounds or DEFAULT_DEBATE_ROUNDS)
         initial_state = _build_initial_state(req.target, req.rounds or DEFAULT_DEBATE_ROUNDS)
         thread_id = str(uuid.uuid4())
 
         try:
-            for chunk in graph.stream(
+            async for chunk in graph.astream(
                 initial_state,
                 config={"configurable": {"thread_id": thread_id}},
             ):
