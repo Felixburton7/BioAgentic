@@ -216,10 +216,10 @@ export default function Home() {
                   try {
                     const payload = JSON.parse(line.slice(6));
 
-                    if (payload.type === "trace") {
+                    if (payload.event === "status") {
+                      // Backend: {event:"status", node:"...", message:"..."}
                       setTraces((prev) => {
-                        const updated = [...prev, payload];
-                        // Save to conversation
+                        const updated = [...prev, { message: payload.message || `Processing ${payload.node}…`, node: payload.node }];
                         setConversations((c) =>
                           c.map((x) =>
                             x.id === convId ? { ...x, traces: updated } : x
@@ -227,9 +227,50 @@ export default function Home() {
                         );
                         return updated;
                       });
-                    } else if (payload.type === "agent") {
+                    } else if (payload.event === "node_complete") {
+                      // Backend: {event:"node_complete", node:"...", duration: 2.3}
+                      setTraces((prev) => {
+                        // Update the last trace for this node with its duration
+                        const updated = prev.map((t) =>
+                          t.node === payload.node && !t.done
+                            ? { ...t, duration: payload.duration, done: true }
+                            : t
+                        );
+                        setConversations((c) =>
+                          c.map((x) =>
+                            x.id === convId ? { ...x, traces: updated } : x
+                          )
+                        );
+                        return updated;
+                      });
+                    } else if (payload.event === "done") {
+                      // Pipeline complete
+                      setIsStreaming(false);
+                      setConversations((prev) =>
+                        prev.map((c) =>
+                          c.id === convId ? { ...c, status: "done" } : c
+                        )
+                      );
+                    } else if (payload.event === "error") {
+                      // Backend: {event:"error", detail:"..."}
+                      setError(payload.detail || "Pipeline error.");
+                      setIsStreaming(false);
+                      setConversations((prev) =>
+                        prev.map((c) =>
+                          c.id === convId ? { ...c, status: "error" } : c
+                        )
+                      );
+                    } else if (payload.agent && payload.content) {
+                      // Agent message — no "event" field
+                      // Backend: {node:"...", agent:"...", content:"...", timestamp:"..."}
+                      const agentMsg = {
+                        agent: payload.agent,
+                        content: payload.content,
+                        timestamp: payload.timestamp,
+                        node: payload.node,
+                      };
                       setMessages((prev) => {
-                        const updated = [...prev, payload];
+                        const updated = [...prev, agentMsg];
                         setConversations((c) =>
                           c.map((x) =>
                             x.id === convId ? { ...x, messages: updated } : x
@@ -237,17 +278,16 @@ export default function Home() {
                         );
                         return updated;
                       });
-                    } else if (payload.type === "brief") {
-                      setBrief(payload.content || "");
-                      setConversations((c) =>
-                        c.map((x) =>
-                          x.id === convId
-                            ? { ...x, brief: payload.content || "" }
-                            : x
-                        )
-                      );
-                    } else if (payload.type === "error") {
-                      setError(payload.content || "Pipeline error.");
+
+                      // If this is the synthesizer, use its content as the brief
+                      if (payload.node === "synthesizer" || payload.agent?.toLowerCase().includes("synthesiz")) {
+                        setBrief(payload.content);
+                        setConversations((c) =>
+                          c.map((x) =>
+                            x.id === convId ? { ...x, brief: payload.content } : x
+                          )
+                        );
+                      }
                     }
                   } catch { }
                 }
