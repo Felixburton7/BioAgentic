@@ -1965,6 +1965,28 @@ body {
   margin-bottom: var(--space-md);
 }
 
+.streaming-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-lg) var(--space-xl);
+  color: var(--text-muted);
+  font-size: 14px;
+  animation: fadeIn 0.3s ease;
+}
+
+.streaming-indicator .spinner {
+  width: 18px;
+  height: 18px;
+}
+
+.empty-research {
+  text-align: center;
+  padding: var(--space-2xl);
+  color: var(--text-faint);
+  font-size: 14px;
+}
+
 /* ================================================================
    Sidebar Empty State
    ================================================================ */

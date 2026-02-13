@@ -351,7 +351,7 @@ export default function Home() {
             <>
               {/* Greeting */}
               <div className="home-form-section">
-                <h1 className="home-greeting">Research</h1>
+                <h1 className="home-greeting">Agentic Bio Research</h1>
                 <ResearchForm onSubmit={handleSubmit} isStreaming={isStreaming} fillPrompt={pendingPrompt} onPromptFilled={() => setPendingPrompt("")} />
               </div>
 
@@ -419,9 +419,33 @@ export default function Home() {
               </div>
 
               <ResearchForm onSubmit={handleSubmit} isStreaming={isStreaming} />
+
+              {/* Error display */}
+              {error && (
+                <div className="error-banner">
+                  <p>⚠️ {error}</p>
+                </div>
+              )}
+
               <ActivityTrace traces={traces} isStreaming={isStreaming} />
-              <AgentStream messages={messages} isDone={!isStreaming && messages.length > 0} error={error} />
+
+              {/* Loading indicator when streaming but no data yet */}
+              {isStreaming && messages.length === 0 && !error && (
+                <div className="streaming-indicator">
+                  <span className="spinner" />
+                  <span>Connecting to research pipeline…</span>
+                </div>
+              )}
+
+              <AgentStream messages={messages} isDone={!isStreaming && messages.length > 0} error={""} />
               {brief && <ReportView brief={brief} />}
+
+              {/* Empty state for past sessions that had no data */}
+              {!isStreaming && messages.length === 0 && !brief && !error && (
+                <div className="empty-research">
+                  <p>No results available for this session.</p>
+                </div>
+              )}
             </>
           )}
         </main>
