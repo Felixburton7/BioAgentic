@@ -347,14 +347,14 @@ export default function Home() {
       <div className={`main-content ${!sidebarOpen ? "sidebar-collapsed" : ""}`}>
         <Navbar isStreaming={isStreaming} />
 
-        <main className="page-container">
+        <main className={`page-container ${brief ? "page-container-wide" : ""}`}>
           {showHome ? (
             <>
               {/* Greeting */}
               <div className="home-form-section">
                 <h1 className="home-greeting">Open Source Agentic Bio Research</h1>
                 <p className="home-subtitle">
-                  Query clinical trials, literature, and biomedical databases with AI-powered agents — no coding required.
+                  Let them debate. This is open-source and free to use, so you can see exactly what is going on. Query clinical trials, literature, and biomedical databases with AI-powered agents — no coding required.
                 </p>
                 <ResearchForm onSubmit={handleSubmit} isStreaming={isStreaming} fillPrompt={pendingPrompt} onPromptFilled={() => setPendingPrompt("")} />
               </div>
@@ -442,7 +442,7 @@ export default function Home() {
               )}
 
               <AgentStream messages={messages} isDone={!isStreaming && messages.length > 0} error={""} />
-              {brief && <ReportView brief={brief} />}
+              {brief && <ReportView brief={brief} target={conversations.find(c => c.id === activeConversationId)?.target} />}
 
               {/* Empty state for past sessions that had no data */}
               {!isStreaming && messages.length === 0 && !brief && !error && (
