@@ -4,17 +4,33 @@ Adapted from backend/main.py's FastAPI structure with fixed streaming.
 """
 
 import json
+import os
+import sys
 import uuid
+import logging
 from datetime import datetime
 from typing import List, Optional
+
+# Debug: log startup progress
+logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+logger = logging.getLogger("bioagentic")
+logger.info("Starting BioAgentic server...")
+logger.info(f"PORT env = {os.environ.get('PORT', 'NOT SET')}")
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from .graph import build_graph, default_graph
-from .config import DEFAULT_DEBATE_ROUNDS
+logger.info("FastAPI imported OK")
+
+try:
+    from .graph import build_graph
+    from .config import DEFAULT_DEBATE_ROUNDS
+    logger.info("Backend modules imported OK")
+except Exception as e:
+    logger.error(f"Import error: {e}", exc_info=True)
+    raise
 
 # ---------------------------------------------------------------------------
 # Pydantic models
@@ -169,6 +185,10 @@ def health():
 # CLI entrypoint
 # ---------------------------------------------------------------------------
 
+logger.info("BioAgentic app object created and ready")
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    port = int(os.environ.get("PORT", 8000))
+    logger.info(f"Starting uvicorn on port {port}")
+    uvicorn.run(app, host="0.0.0.0", port=port)
