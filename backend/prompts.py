@@ -123,3 +123,17 @@ Format your output exactly as:
 [2-3 actionable suggestions]
 
 Be concise. Bold the most critical points. This brief should be useful to a biotech decision-maker in under 2 minutes of reading."""
+
+# ---------------------------------------------------------------------------
+# Convenience dict — agents can look up prompts by role key
+# ---------------------------------------------------------------------------
+BIOTECH_PROMPTS: dict[str, str] = {
+    "analyzer": TARGET_ANALYZER,
+    "trials_scout": TRIALS_SCOUT,
+    "literature_miner": LITERATURE_MINER,
+    "hypothesis_generator": HYPOTHESIS_GENERATOR,
+    "advocate": ADVOCATE,
+    "skeptic": SKEPTIC,
+    "mediator": MEDIATOR,
+    "synthesizer": SYNTHESIZER,
+}

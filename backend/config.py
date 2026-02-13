@@ -68,3 +68,16 @@ def call_llm(
     )
     content = resp.choices[0].message.content
     return content.strip() if content else ""
+
+
+async def acall_llm(
+    system_prompt: str,
+    user_prompt: str,
+    model: str = DEFAULT_MODEL,
+    temperature: float = DEFAULT_TEMPERATURE,
+) -> str:
+    """Async wrapper — runs call_llm in a thread to avoid blocking."""
+    import asyncio
+    return await asyncio.to_thread(
+        call_llm, system_prompt, user_prompt, model, temperature
+    )
