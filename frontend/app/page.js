@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import ResearchForm from "@/components/ResearchForm";
 import ActivityTrace from "@/components/ActivityTrace";
@@ -9,7 +9,70 @@ import ReportView from "@/components/ReportView";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
+/* ─── Password Gate ─── */
+function PasswordGate({ onAuth }) {
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!password.trim()) return;
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await fetch(`${API_BASE}/auth`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: password.trim() }),
+      });
+
+      if (res.ok) {
+        sessionStorage.setItem("bio_auth", "true");
+        onAuth();
+      } else {
+        setError("Invalid password");
+      }
+    } catch {
+      setError("Cannot connect to server");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="password-gate">
+      <div className="password-card">
+        <h1>BioAgentic</h1>
+        <p>Enter the access password to continue.</p>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+            className="password-input"
+            autoFocus
+          />
+          {error && <div className="password-error">{error}</div>}
+          <button
+            type="submit"
+            className="password-btn"
+            disabled={loading || !password.trim()}
+          >
+            {loading ? "Verifying…" : "Enter"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Main App ─── */
 export default function Home() {
+  const [authed, setAuthed] = useState(false);
   const [messages, setMessages] = useState([]);
   const [traces, setTraces] = useState([]);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -19,9 +82,15 @@ export default function Home() {
   const [currentTarget, setCurrentTarget] = useState("");
   const eventSourceRef = useRef(null);
 
+  // Restore auth from sessionStorage on mount
+  useEffect(() => {
+    if (sessionStorage.getItem("bio_auth") === "true") {
+      setAuthed(true);
+    }
+  }, []);
+
   const handleSubmit = useCallback(
     ({ target, rounds }) => {
-      // Reset state
       setMessages([]);
       setTraces([]);
       setIsStreaming(true);
@@ -30,7 +99,6 @@ export default function Home() {
       setBrief(null);
       setCurrentTarget(target);
 
-      // SSE via fetch for POST support
       const controller = new AbortController();
       eventSourceRef.current = controller;
 
@@ -65,7 +133,6 @@ export default function Home() {
               try {
                 const data = JSON.parse(jsonStr);
 
-                // --- Status event: agent is starting ---
                 if (data.event === "status") {
                   setTraces((prev) => [
                     ...prev,
@@ -79,7 +146,6 @@ export default function Home() {
                   continue;
                 }
 
-                // --- Node complete: update trace with duration ---
                 if (data.event === "node_complete") {
                   setTraces((prev) =>
                     prev.map((t) =>
@@ -91,12 +157,10 @@ export default function Home() {
                   continue;
                 }
 
-                // --- Done event ---
                 if (data.event === "done") {
                   setIsDone(true);
                   setIsStreaming(false);
 
-                  // Fetch the full report
                   fetch(`${API_BASE}/research`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -109,24 +173,21 @@ export default function Home() {
                   return;
                 }
 
-                // --- Error event ---
                 if (data.event === "error") {
                   setError(data.detail || "Pipeline error");
                   setIsStreaming(false);
                   return;
                 }
 
-                // --- Agent content message ---
                 if (data.content) {
                   setMessages((prev) => [...prev, data]);
                 }
               } catch {
-                // Skip malformed JSON
+                // skip malformed JSON
               }
             }
           }
 
-          // If stream ended without a done event
           setIsDone(true);
           setIsStreaming(false);
         })
@@ -154,14 +215,18 @@ export default function Home() {
     setCurrentTarget("");
   };
 
+  /* ─── Password gate ─── */
+  if (!authed) {
+    return <PasswordGate onAuth={() => setAuthed(true)} />;
+  }
+
+  /* ─── Authenticated view ─── */
   const showEmptyState = messages.length === 0 && !isStreaming && !error && !isDone;
-  const showResults = messages.length > 0 || error || traces.length > 0;
 
   return (
     <>
       <Navbar isStreaming={isStreaming} />
       <main className="page-container">
-        {/* Hero — only on empty state */}
         {showEmptyState && (
           <div className="hero">
             <h1>BioAgentic</h1>
@@ -172,15 +237,10 @@ export default function Home() {
           </div>
         )}
 
-        {/* Research Form */}
         <ResearchForm onSubmit={handleSubmit} isStreaming={isStreaming} />
 
-        {/* Activity Traces — Perplexity-style "Show traces" */}
-        {traces.length > 0 && (
-          <ActivityTrace traces={traces} />
-        )}
+        {traces.length > 0 && <ActivityTrace traces={traces} />}
 
-        {/* Streaming Output */}
         {(messages.length > 0 || error) && (
           <AgentStream
             messages={messages}
@@ -189,25 +249,15 @@ export default function Home() {
           />
         )}
 
-        {/* Final Report */}
         {isDone && brief && (
           <ReportView brief={brief} target={currentTarget} />
         )}
 
-        {/* New Research button */}
         {isDone && (
           <div style={{ textAlign: "center", marginTop: "var(--space-lg)" }}>
             <button className="btn-secondary" onClick={handleReset}>
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="1 4 1 10 7 10" />
                 <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
               </svg>
@@ -216,16 +266,12 @@ export default function Home() {
           </div>
         )}
 
-        {/* Empty state hint */}
         {showEmptyState && (
           <div className="empty-state">
-            <p>
-              Try a drug target, gene, mutation, or disease above.
-            </p>
+            <p>Try a drug target, gene, mutation, or disease above.</p>
           </div>
         )}
 
-        {/* Footer */}
         <footer className="footer">
           <p>Powered by Grok &amp; LangGraph</p>
         </footer>

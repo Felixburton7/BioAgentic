@@ -81,7 +81,7 @@
 }
 
 html {
-  font-size: 16px;
+  font-size: 20px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -90,13 +90,98 @@ body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  line-height: 1.6;
+  line-height: 2;
   min-height: 100vh;
 }
 
 ::selection {
   background: rgba(26, 26, 26, 0.1);
   color: var(--text-primary);
+}
+
+/* ================================================================
+   Password Gate
+   ================================================================ */
+
+.password-gate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--bg-primary);
+  padding: var(--space-lg);
+}
+
+.password-card {
+  text-align: center;
+  max-width: 380px;
+  width: 100%;
+}
+
+.password-icon {
+  font-size: 48px;
+  margin-bottom: var(--space-md);
+}
+
+.password-card h1 {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-xs);
+  letter-spacing: -0.5px;
+}
+
+.password-card>p {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: var(--space-xl);
+}
+
+.password-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  font-size: 15px;
+  font-family: inherit;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color var(--transition-fast);
+  margin-bottom: var(--space-sm);
+}
+
+.password-input:focus {
+  border-color: var(--border-strong);
+}
+
+.password-error {
+  font-size: 13px;
+  color: #c0392b;
+  margin-bottom: var(--space-sm);
+}
+
+.password-btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: var(--radius-lg);
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  font-size: 15px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+.password-btn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.password-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 /* ================================================================
@@ -565,8 +650,8 @@ body {
 
 .agent-card-content {
   padding: var(--space-sm) var(--space-md) var(--space-md);
-  font-size: 15px;
-  line-height: 1.75;
+  font-size: 18px;
+  line-height: 1.9;
   color: var(--text-secondary);
 }
 
@@ -635,10 +720,10 @@ body {
 
 /* Markdown Rendering */
 .report-body h2 {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 600;
   color: var(--text-primary);
-  margin: var(--space-xl) 0 var(--space-md);
+  margin: var(--space-2xl) 0 var(--space-lg);
   padding-bottom: var(--space-sm);
   border-bottom: 1px solid var(--border);
   letter-spacing: -0.3px;
@@ -649,17 +734,17 @@ body {
 }
 
 .report-body h3 {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
   color: var(--text-primary);
-  margin: var(--space-lg) 0 var(--space-sm);
+  margin: var(--space-xl) 0 var(--space-md);
 }
 
 .report-body p {
-  font-size: 15px;
+  font-size: 16px;
   color: var(--text-secondary);
-  margin-bottom: var(--space-md);
-  line-height: 1.75;
+  margin-bottom: var(--space-lg);
+  line-height: 1.9;
 }
 
 .report-body strong {
@@ -674,10 +759,10 @@ body {
 }
 
 .report-body li {
-  font-size: 15px;
+  font-size: 16px;
   color: var(--text-secondary);
-  margin-bottom: 6px;
-  line-height: 1.7;
+  margin-bottom: 10px;
+  line-height: 1.85;
 }
 
 .report-body code {
@@ -700,8 +785,9 @@ body {
 
 .report-body th,
 .report-body td {
-  padding: 10px var(--space-md);
+  padding: 12px var(--space-lg);
   text-align: left;
+  font-size: 15px;
   border: 1px solid var(--border);
 }
 

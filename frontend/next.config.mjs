@@ -8,6 +8,10 @@ const nextConfig = {
         destination: `${backendUrl}/research/:path*`,
       },
       {
+        source: "/auth",
+        destination: `${backendUrl}/auth`,
+      },
+      {
         source: "/health",
         destination: `${backendUrl}/health`,
       },

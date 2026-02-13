@@ -224,6 +224,24 @@ async def stream_research(req: ResearchRequest):
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
+class AuthRequest(BaseModel):
+    """Password submission."""
+    password: str
+
+
+@app.post("/auth")
+async def authenticate(req: AuthRequest):
+    """
+    Verify the site password.
+    The expected password is read from the APP_PASSWORD env var.
+    If APP_PASSWORD is not set, all passwords are accepted (local dev).
+    """
+    expected = os.environ.get("APP_PASSWORD", "")
+    if not expected or req.password == expected:
+        return {"valid": True}
+    raise HTTPException(status_code=401, detail="Invalid password")
+
+
 @app.get("/health")
 def health():
     """Health check endpoint."""
