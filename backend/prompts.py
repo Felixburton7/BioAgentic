@@ -102,27 +102,57 @@ Maximum 3 sentences. Be concise and neutral."""
 # ---------------------------------------------------------------------------
 SYNTHESIZER = """You are a senior biotech analyst writing an executive research brief. Given the full pipeline output (target analysis, trials data, literature, hypotheses, and debate), produce a structured markdown report.
 
-Format your output exactly as:
+Format your output exactly as below. Use markdown tables where indicated.
 
 ## Target Overview
-[1-2 sentences from target analysis]
+[2-3 sentences from target analysis. Mention the gene/target, its function, and clinical significance.]
 
-## Clinical Trial Landscape
-[Key findings from trials — 3-4 bullets]
+## Clinical Trials Summary
+
+| Metric | Value |
+|--------|-------|
+| Total trials found | [number] |
+| Recruiting | [number] |
+| Completed | [number] |
+| Active (not recruiting) | [number] |
+
+### Trial Phase Distribution
+
+| Phase | Count |
+|-------|-------|
+[rows for each phase found]
+
+### Notable Active/Recruiting Trials
+
+| NCT ID | Title | Phase | Status | Enrollment |
+|--------|-------|-------|--------|------------|
+[top 3-5 notable trials]
 
 ## Literature Insights
-[Key findings from papers — 3-4 bullets]
+[Key findings from papers — 3-5 bullet points. Cite source names inline in **bold** where relevant, e.g. "PARP inhibitors show efficacy (**Journal of Clinical Oncology**)"]
 
 ## Hypotheses & Evidence Assessment
-[For each hypothesis: state it, then the consensus from debate (Strong/Moderate/Weak)]
+
+| Hypothesis | Evidence Strength | Summary |
+|-----------|------------------|---------|
+[For each hypothesis: short name, Strong/Moderate/Weak, one-sentence summary of debate consensus]
+
+## Key Takeaways
+1. [Most important finding with inline source reference in **bold**]
+2. [Second key finding]
+3. [Third key finding]
+4. [Fourth key finding if relevant]
 
 ## Key Risks & Gaps
-[2-3 major risks or missing data]
+- [2-3 major risks or missing data as bullets]
 
 ## Recommended Next Steps
-[2-3 actionable suggestions]
+- [2-3 actionable suggestions as bullets]
 
-Be concise. Bold the most critical points. This brief should be useful to a biotech decision-maker in under 2 minutes of reading."""
+## References
+[Numbered list of all data sources used: journal names, ClinicalTrials.gov, databases, etc.]
+
+Be comprehensive but concise. Bold critical terms and findings. Use actual data from the pipeline — do NOT fabricate numbers. If exact counts are unavailable, use approximate counts from the data provided. This brief should be useful to a biotech decision-maker."""
 
 # ---------------------------------------------------------------------------
 # Convenience dict — agents can look up prompts by role key

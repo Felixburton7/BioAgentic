@@ -6,6 +6,7 @@ Adapted from backend/main.py's FastAPI structure with fixed streaming.
 import json
 import os
 import sys
+import time
 import uuid
 import logging
 from datetime import datetime
@@ -31,6 +32,28 @@ try:
 except Exception as e:
     logger.error(f"Import error: {e}", exc_info=True)
     raise
+
+# ---------------------------------------------------------------------------
+# Pipeline status messages — shown in the frontend activity trace
+# ---------------------------------------------------------------------------
+
+PIPELINE_STATUS: dict[str, str] = {
+    "analyzer": "Analysing research target…",
+    "trials_scout": "Searching for clinical trials…",
+    "literature_miner": "Mining academic literature…",
+    "hypothesis_generator": "Generating hypotheses…",
+    "debate": "Running debate rounds…",
+    "synthesizer": "Writing research brief…",
+}
+
+PIPELINE_ORDER = [
+    "analyzer",
+    "trials_scout",
+    "literature_miner",
+    "hypothesis_generator",
+    "debate",
+    "synthesizer",
+]
 
 # ---------------------------------------------------------------------------
 # Pydantic models
@@ -143,20 +166,34 @@ async def run_research(req: ResearchRequest):
 async def stream_research(req: ResearchRequest):
     """
     Run the pipeline with SSE streaming — yields agent outputs in real-time.
-    Uses LangGraph's built-in graph.astream() for async node compatibility.
+    Emits status/progress events so the frontend can show activity traces.
     """
     async def event_generator():
         graph = build_graph(debate_rounds=req.rounds or DEFAULT_DEBATE_ROUNDS)
         initial_state = _build_initial_state(req.target, req.rounds or DEFAULT_DEBATE_ROUNDS)
         thread_id = str(uuid.uuid4())
 
+        # Emit the initial status for the first node
+        first_node = PIPELINE_ORDER[0]
+        yield f"data: {json.dumps({'event': 'status', 'node': first_node, 'message': PIPELINE_STATUS.get(first_node, 'Processing…')})}\n\n"
+
+        node_start = time.time()
+
         try:
             async for chunk in graph.astream(
                 initial_state,
                 config={"configurable": {"thread_id": thread_id}},
             ):
+                now = time.time()
+
                 # Each chunk is {node_name: state_update}
                 for node_name, update in chunk.items():
+                    duration = round(now - node_start, 1)
+
+                    # Emit node_complete with duration
+                    yield f"data: {json.dumps({'event': 'node_complete', 'node': node_name, 'duration': duration})}\n\n"
+
+                    # Emit the agent log entries (content)
                     log_entries = update.get("agents_log", [])
                     for entry in log_entries:
                         event = {
@@ -166,6 +203,17 @@ async def stream_research(req: ResearchRequest):
                             "timestamp": datetime.utcnow().isoformat(),
                         }
                         yield f"data: {json.dumps(event)}\n\n"
+
+                    # Emit status for the next node
+                    try:
+                        idx = PIPELINE_ORDER.index(node_name)
+                        if idx + 1 < len(PIPELINE_ORDER):
+                            next_node = PIPELINE_ORDER[idx + 1]
+                            yield f"data: {json.dumps({'event': 'status', 'node': next_node, 'message': PIPELINE_STATUS.get(next_node, 'Processing…')})}\n\n"
+                    except ValueError:
+                        pass
+
+                    node_start = now
 
             yield f"data: {json.dumps({'event': 'done'})}\n\n"
 

@@ -125,7 +125,7 @@ body {
    ================================================================ */
 
 .page-container {
-  max-width: 720px;
+  max-width: 960px;
   margin: 0 auto;
   padding: var(--space-2xl) var(--space-lg);
   min-height: calc(100vh - 52px);
@@ -189,8 +189,15 @@ body {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.3;
+  }
 }
 
 /* ================================================================
@@ -518,14 +525,37 @@ body {
   flex-shrink: 0;
 }
 
-.agent-badge-dot.analyzer  { background: var(--purple); }
-.agent-badge-dot.trials    { background: var(--teal); }
-.agent-badge-dot.literature { background: var(--amber); }
-.agent-badge-dot.hypothesis { background: #2383e2; }
-.agent-badge-dot.advocate  { background: var(--green); }
-.agent-badge-dot.skeptic   { background: var(--red); }
-.agent-badge-dot.mediator  { background: var(--amber); }
-.agent-badge-dot.synthesizer { background: var(--purple); }
+.agent-badge-dot.analyzer {
+  background: var(--purple);
+}
+
+.agent-badge-dot.trials {
+  background: var(--teal);
+}
+
+.agent-badge-dot.literature {
+  background: var(--amber);
+}
+
+.agent-badge-dot.hypothesis {
+  background: #2383e2;
+}
+
+.agent-badge-dot.advocate {
+  background: var(--green);
+}
+
+.agent-badge-dot.skeptic {
+  background: var(--red);
+}
+
+.agent-badge-dot.mediator {
+  background: var(--amber);
+}
+
+.agent-badge-dot.synthesizer {
+  background: var(--purple);
+}
 
 .agent-timestamp {
   font-size: 11px;
@@ -534,9 +564,9 @@ body {
 }
 
 .agent-card-content {
-  padding: 0 var(--space-md) var(--space-md);
-  font-size: 14px;
-  line-height: 1.7;
+  padding: var(--space-sm) var(--space-md) var(--space-md);
+  font-size: 15px;
+  line-height: 1.75;
   color: var(--text-secondary);
 }
 
@@ -605,7 +635,7 @@ body {
 
 /* Markdown Rendering */
 .report-body h2 {
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 600;
   color: var(--text-primary);
   margin: var(--space-xl) 0 var(--space-md);
@@ -619,17 +649,17 @@ body {
 }
 
 .report-body h3 {
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 600;
   color: var(--text-primary);
   margin: var(--space-lg) 0 var(--space-sm);
 }
 
 .report-body p {
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text-secondary);
   margin-bottom: var(--space-md);
-  line-height: 1.7;
+  line-height: 1.75;
 }
 
 .report-body strong {
@@ -644,10 +674,10 @@ body {
 }
 
 .report-body li {
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text-secondary);
   margin-bottom: 6px;
-  line-height: 1.6;
+  line-height: 1.7;
 }
 
 .report-body code {
@@ -662,26 +692,122 @@ body {
   width: 100%;
   border-collapse: collapse;
   margin: var(--space-md) 0;
-  font-size: 13px;
+  font-size: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
 }
 
 .report-body th,
 .report-body td {
-  padding: var(--space-sm) var(--space-md);
+  padding: 10px var(--space-md);
   text-align: left;
-  border-bottom: 1px solid var(--border);
+  border: 1px solid var(--border);
 }
 
 .report-body th {
-  color: var(--text-muted);
+  color: var(--text-primary);
   font-weight: 600;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-size: 14px;
+  background: var(--bg-tertiary);
 }
 
 .report-body td {
   color: var(--text-secondary);
+}
+
+/* ================================================================
+   Activity Trace — Perplexity-style "Show traces"
+   ================================================================ */
+
+.activity-trace {
+  margin-bottom: var(--space-lg);
+}
+
+.trace-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.trace-toggle:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.trace-chevron {
+  transition: transform var(--transition-normal);
+}
+
+.trace-chevron.open {
+  transform: rotate(180deg);
+}
+
+.trace-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: var(--space-sm);
+  padding-left: 4px;
+}
+
+.trace-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 8px 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  color: var(--text-secondary);
+  animation: fadeIn 0.2s ease forwards;
+}
+
+.trace-icon {
+  display: flex;
+  align-items: center;
+  color: var(--text-faint);
+  flex-shrink: 0;
+}
+
+.trace-message {
+  flex: 1;
+}
+
+.trace-duration {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--text-faint);
+  font-size: 12px;
+  font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+  flex-shrink: 0;
+}
+
+.trace-spinner-wrap {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.trace-spinner {
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid var(--border-strong);
+  border-top-color: var(--text-secondary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
 }
 
 /* ================================================================
@@ -709,13 +835,28 @@ body {
   margin-bottom: var(--space-sm);
 }
 
-.skeleton-line.short { width: 30%; }
-.skeleton-line.medium { width: 60%; }
-.skeleton-line.long { width: 85%; }
+.skeleton-line.short {
+  width: 30%;
+}
+
+.skeleton-line.medium {
+  width: 60%;
+}
+
+.skeleton-line.long {
+  width: 85%;
+}
 
 @keyframes shimmer {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
 }
 
 /* ================================================================
@@ -732,7 +873,9 @@ body {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ================================================================

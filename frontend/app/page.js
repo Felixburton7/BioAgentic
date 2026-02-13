@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import Navbar from "@/components/Navbar";
 import ResearchForm from "@/components/ResearchForm";
+import ActivityTrace from "@/components/ActivityTrace";
 import AgentStream from "@/components/AgentStream";
 import ReportView from "@/components/ReportView";
 
@@ -10,6 +11,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
 export default function Home() {
   const [messages, setMessages] = useState([]);
+  const [traces, setTraces] = useState([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isDone, setIsDone] = useState(false);
   const [error, setError] = useState(null);
@@ -21,6 +23,7 @@ export default function Home() {
     ({ target, rounds }) => {
       // Reset state
       setMessages([]);
+      setTraces([]);
       setIsStreaming(true);
       setIsDone(false);
       setError(null);
@@ -62,6 +65,33 @@ export default function Home() {
               try {
                 const data = JSON.parse(jsonStr);
 
+                // --- Status event: agent is starting ---
+                if (data.event === "status") {
+                  setTraces((prev) => [
+                    ...prev,
+                    {
+                      node: data.node,
+                      message: data.message,
+                      duration: null,
+                      done: false,
+                    },
+                  ]);
+                  continue;
+                }
+
+                // --- Node complete: update trace with duration ---
+                if (data.event === "node_complete") {
+                  setTraces((prev) =>
+                    prev.map((t) =>
+                      t.node === data.node && !t.done
+                        ? { ...t, duration: data.duration, done: true }
+                        : t
+                    )
+                  );
+                  continue;
+                }
+
+                // --- Done event ---
                 if (data.event === "done") {
                   setIsDone(true);
                   setIsStreaming(false);
@@ -79,12 +109,14 @@ export default function Home() {
                   return;
                 }
 
+                // --- Error event ---
                 if (data.event === "error") {
                   setError(data.detail || "Pipeline error");
                   setIsStreaming(false);
                   return;
                 }
 
+                // --- Agent content message ---
                 if (data.content) {
                   setMessages((prev) => [...prev, data]);
                 }
@@ -114,6 +146,7 @@ export default function Home() {
       eventSourceRef.current.abort();
     }
     setMessages([]);
+    setTraces([]);
     setIsStreaming(false);
     setIsDone(false);
     setError(null);
@@ -122,6 +155,7 @@ export default function Home() {
   };
 
   const showEmptyState = messages.length === 0 && !isStreaming && !error && !isDone;
+  const showResults = messages.length > 0 || error || traces.length > 0;
 
   return (
     <>
@@ -140,6 +174,11 @@ export default function Home() {
 
         {/* Research Form */}
         <ResearchForm onSubmit={handleSubmit} isStreaming={isStreaming} />
+
+        {/* Activity Traces — Perplexity-style "Show traces" */}
+        {traces.length > 0 && (
+          <ActivityTrace traces={traces} />
+        )}
 
         {/* Streaming Output */}
         {(messages.length > 0 || error) && (
