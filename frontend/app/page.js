@@ -102,6 +102,7 @@ export default function Home() {
   const [brief, setBrief] = useState("");
   const [error, setError] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [pendingPrompt, setPendingPrompt] = useState("");
 
   // Conversation history — stored in state, persists within session
   const [conversations, setConversations] = useState([]);
@@ -304,9 +305,10 @@ export default function Home() {
         <main className="page-container">
           {showHome ? (
             <>
-              {/* Research form */}
+              {/* Greeting */}
               <div className="home-form-section">
-                <ResearchForm onSubmit={handleSubmit} isStreaming={isStreaming} />
+                <h1 className="home-greeting">Research</h1>
+                <ResearchForm onSubmit={handleSubmit} isStreaming={isStreaming} fillPrompt={pendingPrompt} onPromptFilled={() => setPendingPrompt("")} />
               </div>
 
               {/* Sample prompts */}
@@ -322,7 +324,7 @@ export default function Home() {
                     <button
                       key={i}
                       className="prompt-card"
-                      onClick={() => handleSubmit({ target: prompt, rounds: 2 })}
+                      onClick={() => setPendingPrompt(prompt)}
                     >
                       <span className="prompt-card-text">{prompt}</span>
                       <span className="prompt-card-arrow">
@@ -373,7 +375,7 @@ export default function Home() {
               </div>
 
               <ResearchForm onSubmit={handleSubmit} isStreaming={isStreaming} />
-              <ActivityTrace entries={traces} isStreaming={isStreaming} />
+              <ActivityTrace traces={traces} isStreaming={isStreaming} />
               <AgentStream messages={messages} isDone={!isStreaming && messages.length > 0} error={error} />
               {brief && <ReportView brief={brief} />}
             </>
