@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&display=swap');
 
 /* ================================================================
    Design System — Warm Minimalist (Reference-matched)
@@ -1950,12 +1951,26 @@ body {
 }
 
 .home-greeting {
-  font-size: 36px;
-  font-weight: 700;
-  letter-spacing: -1px;
+  font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  font-size: 44px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
   color: var(--text-primary);
-  margin-bottom: var(--space-lg);
-  line-height: 1.1;
+  margin-bottom: var(--space-md);
+  line-height: 1.15;
+  text-align: center;
+}
+
+.home-subtitle {
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-bottom: var(--space-xl);
+  line-height: 1.6;
+  text-align: center;
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .active-research-header {

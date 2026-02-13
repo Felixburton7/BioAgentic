@@ -156,9 +156,8 @@ export default function Home() {
       setError("");
       setIsStreaming(false);
       setActiveConversationId(id);
-      // Show research view if conversation has any data
-      const hasData = (conv.messages && conv.messages.length > 0) || conv.brief || (conv.traces && conv.traces.length > 0);
-      setResearchActive(hasData);
+      // Always show the research view when clicking a session
+      setResearchActive(true);
     },
     [conversations]
   );
@@ -353,7 +352,10 @@ export default function Home() {
             <>
               {/* Greeting */}
               <div className="home-form-section">
-                <h1 className="home-greeting">Agentic Bio Research</h1>
+                <h1 className="home-greeting">Open Source Agentic Bio Research</h1>
+                <p className="home-subtitle">
+                  Query clinical trials, literature, and biomedical databases with AI-powered agents — no coding required.
+                </p>
                 <ResearchForm onSubmit={handleSubmit} isStreaming={isStreaming} fillPrompt={pendingPrompt} onPromptFilled={() => setPendingPrompt("")} />
               </div>
 
