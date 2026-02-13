@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&display=swap');
 
 /* ================================================================
    Design System — Warm Minimalist (Reference-matched)
@@ -482,6 +482,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: var(--space-sm) var(--space-lg);
+  padding-left: 56px;
   background: rgba(245, 243, 238, 0.8);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -558,7 +559,7 @@ body {
 
 .page-container.page-container-wide {
   max-width: 100%;
-  padding: var(--space-xl) var(--space-md);
+  padding: var(--space-xl) var(--space-2xl);
 }
 
 /* ================================================================
@@ -2227,8 +2228,8 @@ body {
 
 .sidebar-toggle-btn {
   position: fixed;
-  top: 10px;
-  left: 10px;
+  top: 6px;
+  left: 12px;
   z-index: 250;
   width: 36px;
   height: 36px;
@@ -2240,7 +2241,7 @@ body {
   background: var(--bg-secondary);
   color: var(--text-muted);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all var(--transition-slow);
   box-shadow: var(--shadow-sm);
 }
 
@@ -2312,13 +2313,13 @@ body {
 }
 
 .home-greeting {
-  font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
-  font-size: 54px;
-  font-weight: 700;
-  letter-spacing: -0.3px;
+  font-family: 'DM Serif Display', Georgia, 'Times New Roman', serif;
+  font-size: 52px;
+  font-weight: 400;
+  letter-spacing: -0.2px;
   color: var(--text-primary);
   margin-bottom: var(--space-md);
-  line-height: 1.12;
+  line-height: 1.15;
   text-align: left;
 }
 

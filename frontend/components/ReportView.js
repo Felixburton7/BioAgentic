@@ -90,6 +90,7 @@ function extractSources(markdown) {
                     context: context,
                     line: i + 1,
                     section: findSection(lines, i),
+                    url: `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(text)}`
                 });
             }
         }
@@ -113,6 +114,7 @@ function extractSources(markdown) {
                     context: refText,
                     line: i + 1,
                     section: "References",
+                    url: `https://scholar.google.com/scholar?q=${encodeURIComponent(refText.slice(0, 100))}`
                 });
             }
         }

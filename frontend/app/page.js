@@ -352,9 +352,9 @@ export default function Home() {
             <>
               {/* Greeting */}
               <div className="home-form-section">
-                <h1 className="home-greeting">Open Source Agentic Bio Research</h1>
+                <h1 className="home-greeting">Agentic Bio Research</h1>
                 <p className="home-subtitle">
-                  Let them debate. This is open-source and free to use, so you can see exactly what is going on. Query clinical trials, literature, and biomedical databases with AI-powered agents — no coding required.
+                  AI-powered agents query clinical trials, literature, and biomedical databases — then debate the findings. Open-source. No coding required.
                 </p>
                 <ResearchForm onSubmit={handleSubmit} isStreaming={isStreaming} fillPrompt={pendingPrompt} onPromptFilled={() => setPendingPrompt("")} />
               </div>
