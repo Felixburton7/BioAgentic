@@ -559,7 +559,7 @@ body {
 
 .page-container.page-container-wide {
   max-width: 100%;
-  padding: var(--space-xl) var(--space-2xl);
+  padding: var(--space-xl) var(--space-xl);
 }
 
 /* ================================================================

@@ -1,134 +1,68 @@
-# BioAgentic
+<div align="center">
+  <img src="logo.png" alt="BioAgentic Logo" width="200"/>
+  <h1>BioAgentic</h1>
+  <p><strong>Agentic research for the rest of us.</strong></p>
+  
+  <p>Designed by Felix & Fred to help research at Cambridge.</p>
 
-Agentic system for biotech research — searches clinical trials + academic literature, generates hypotheses, and debates their merits using a multi-agent LangGraph pipeline powered by Grok.
+  <a href="#quick-start">Quick Start</a> •
+  <a href="#how-it-works">How it Works</a> •
+  <a href="#deployment">Deployment</a>
+</div>
 
-## Architecture
+<br/>
 
-```
-User Input (e.g. "KRAS G12C")
-    → Target Analyzer       (parse gene/mutation context)
-    → Trials Scout           (ClinicalTrials.gov API)
-    → Literature Miner       (PubMed + Semantic Scholar)
-    → Hypothesis Generator   (3 novel hypotheses)
-    → Debate Loop            (Advocate ↔ Skeptic ↔ Mediator × N rounds)
-    → Synthesizer            → Markdown Brief
-```
+BioAgentic is an open-source tool that acts as a tireless research partner. It reads the papers you don't have time for, checks the trials you missed, and debates hypotheses to keep you honest.
 
-Inspired by [Denario](https://github.com/AstroPilot-AI/Denario)'s LangGraph modularity and ASCollab's peer-review debate dynamics.
+We built this because we were tired of "black box" AI tools that give answers without showing the work. BioAgentic is open, transparent, and designed to help you think faster, not just retrieve links. It runs locally, respects your privacy, and actually cites its sources.
 
 ## Quick Start
-
-### Prerequisites
-
-- **Python ≥ 3.11**
-- **Node.js ≥ 18** (for the Next.js frontend)
-- A **Grok API key** from [x.ai](https://x.ai)
-
-### 1. Clone & configure environment
+Get up and running in seconds. You'll need Python 3.11+, Node 18+, and a Grok API key.
 
 ```bash
+# 1. Get the code
 git clone https://github.com/Felixburton7/BioAgentic.git
 cd BioAgentic
 
-# Copy the example env and add your API keys
+# 2. Configure (just adds your key)
 cp .env.example .env
-# Edit .env → set XAI_API_KEY (required)
-```
 
-### 2. Start everything (recommended)
-Check you have activated your virtual environment then:
-
-```bash
-source BAvenv/bin/activate
-```
-```bash
-chmod +x start.sh
+# 3. Launch
 ./start.sh
 ```
 
-This launches **both** the backend (port 8000) and frontend (port 3000) in one terminal. Press `Ctrl+C` to stop both.
+The backend will start on port `8000` and the frontend on `3000`.
 
-### 3. Or start manually
+## How it Works
 
-```bash
-# Terminal 1 — Backend
-pip install -e .
-uvicorn backend.server:app --reload --port 8000
+BioAgentic doesn't just search; it thinks. When you give it a target (like "KRAS G12C"), it spins up a team of specialized agents:
 
-# Terminal 2 — Frontend
-cd frontend
-npm install
-npm run dev
+```mermaid
+graph LR
+    A[You Ask] --> |"KRAS G12C"| B(Scouts)
+    B --> |Trials & Papers| C(Hypothesize)
+    C --> D{Debate Loop}
+    D -- Advocate vs Skeptic --> D
+    D --> E[Final Brief]
 ```
 
-### 4. Test the API directly
-
-```bash
-curl -X POST http://localhost:8000/research \
-  -H "Content-Type: application/json" \
-  -d '{"target": "KRAS G12C", "rounds": 2}'
-```
-
-## API Endpoints
-
-| Endpoint | Method | Description |
-|---|---|---|
-| `/research` | POST | Run full pipeline, returns JSON |
-| `/research/stream` | POST | SSE streaming of agent outputs |
-| `/health` | GET | Health check |
-
-## Project Structure
-
-```
-BioAgentic/
-├── start.sh                # Start frontend + backend together
-├── pyproject.toml           # Python dependencies & build config
-├── .env.example             # Template for API keys
-├── Dockerfile               # Container build (Railway/Docker)
-├── Procfile                 # Railway deployment entrypoint
-│
-├── backend/
-│   ├── config.py            # Model config, LLM client (LiteLLM/Grok)
-│   ├── state.py             # TypedDict state definitions
-│   ├── prompts.py           # Agent role prompts + BIOTECH_PROMPTS dict
-│   ├── graph.py             # LangGraph pipeline builder
-│   ├── server.py            # FastAPI server (async endpoints)
-│   ├── tools/
-│   │   ├── clinical_trials.py  # ClinicalTrials.gov API v2
-│   │   ├── pubmed.py           # PubMed E-utilities
-│   │   └── semantic_scholar.py # Semantic Scholar API
-│   └── agents/
-│       ├── analyzer.py      # TargetAnalyzer — parse gene/mutation
-│       ├── scouts.py         # TrialsScout + LitScout
-│       ├── hypothesis.py    # HypothesisGenerator — 3 hypotheses
-│       └── debate.py        # Debate (advocate/skeptic/mediator) + Synthesizer
-│
-└── frontend/                # Next.js 16 app
-    ├── app/                 # App router pages
-    ├── components/          # React components
-    └── package.json
-```
-
-## Configuration
-
-Set in `.env`:
-
-| Variable | Required | Description |
-|---|---|---|
-| `XAI_API_KEY` | ✅ Yes | Grok API key from [x.ai](https://x.ai) |
-| `NCBI_API_KEY` | Optional | Higher PubMed rate limits ([get free key](https://www.ncbi.nlm.nih.gov/account/)) |
-| `SEMANTIC_SCHOLAR_KEY` | Optional | Semantic Scholar rate limits ([API docs](https://www.semanticscholar.org/product/api)) |
+1.  **Scout**: Agents mine ClinicalTrials.gov and academic literature (PubMed, Semantic Scholar).
+2.  **Hypothesize**: It generates novel hypotheses based on the raw data.
+3.  **Debate**: An "Advocate" and a "Skeptic" agent debate these hypotheses in rounds, with a Mediator keeping them on track. This adversarial process kills hallucinations and sharpens arguments.
+4.  **Synthesize**: You get a clean, cited research brief.
 
 ## Deployment
 
-### Railway (backend)
+### Railway (Backend)
+The repo works out of the box with Railway. Just connect your GitHub and it will pick up the `railway.json` and `Dockerfile`.
 
-The repo includes `Dockerfile`, `Procfile`, and `railway.json` for one-click Railway deployment.
+### Vercel (Frontend)
+Point Vercel to the `frontend/` directory.
 
-### Vercel (frontend)
-
-The `frontend/` directory includes `vercel.json` for Vercel deployment. Set the **root directory** to `frontend` in Vercel project settings.
+## Project Structure
+*   `backend/`: FastAPI, LangGraph agents, and tools.
+*   `frontend/`: Next.js 16 app for the interface.
 
 ## License
+MIT. Go wild.
 
-MIT

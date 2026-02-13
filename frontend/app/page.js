@@ -352,9 +352,9 @@ export default function Home() {
             <>
               {/* Greeting */}
               <div className="home-form-section">
-                <h1 className="home-greeting">Agentic Bio Research</h1>
+                <h1 className="home-greeting">Open Source Agentic Bio Research</h1>
                 <p className="home-subtitle">
-                  AI-powered agents query clinical trials, literature, and biomedical databases — then debate the findings. Open-source. No coding required.
+                  Query clinical trials, literature, and biomedical databases with AI-powered agents — no coding required.
                 </p>
                 <ResearchForm onSubmit={handleSubmit} isStreaming={isStreaming} fillPrompt={pendingPrompt} onPromptFilled={() => setPendingPrompt("")} />
               </div>
@@ -442,7 +442,7 @@ export default function Home() {
               )}
 
               <AgentStream messages={messages} isDone={!isStreaming && messages.length > 0} error={""} />
-              {brief && <ReportView brief={brief} target={conversations.find(c => c.id === activeConversationId)?.target} />}
+              {brief && <ReportView brief={brief} />}
 
               {/* Empty state for past sessions that had no data */}
               {!isStreaming && messages.length === 0 && !brief && !error && (
