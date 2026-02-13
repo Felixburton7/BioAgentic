@@ -121,35 +121,22 @@ export default function Home() {
     setCurrentTarget("");
   };
 
+  const showEmptyState = messages.length === 0 && !isStreaming && !error && !isDone;
+
   return (
     <>
       <Navbar isStreaming={isStreaming} />
       <main className="page-container">
-        {/* Hero */}
-        <div className="hero">
-          <div className="hero-label">
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M12 2L12 22" />
-              <path d="M5 7C5 7 8 4 12 4C16 4 19 7 19 7" />
-              <path d="M5 17C5 17 8 20 12 20C16 20 19 17 19 17" />
-            </svg>
-            Multi-Agent Research Pipeline
+        {/* Hero — only on empty state */}
+        {showEmptyState && (
+          <div className="hero">
+            <h1>BioAgentic</h1>
+            <p>
+              Search clinical trials &amp; literature, generate
+              hypotheses, and debate their merits.
+            </p>
           </div>
-          <h1>BioAgentic</h1>
-          <p>
-            Search clinical trials &amp; literature, generate hypotheses, and
-            debate their merits — all powered by a multi-agent pipeline.
-          </p>
-        </div>
+        )}
 
         {/* Research Form */}
         <ResearchForm onSubmit={handleSubmit} isStreaming={isStreaming} />
@@ -170,7 +157,7 @@ export default function Home() {
 
         {/* New Research button */}
         {isDone && (
-          <div style={{ textAlign: "center", marginTop: "var(--space-xl)" }}>
+          <div style={{ textAlign: "center", marginTop: "var(--space-lg)" }}>
             <button className="btn-secondary" onClick={handleReset}>
               <svg
                 width="14"
@@ -190,24 +177,18 @@ export default function Home() {
           </div>
         )}
 
-        {/* Empty state */}
-        {messages.length === 0 && !isStreaming && !error && (
+        {/* Empty state hint */}
+        {showEmptyState && (
           <div className="empty-state">
-            <div className="empty-state-icon">🧬</div>
-            <h3>Enter a research target to begin</h3>
             <p>
-              Try a drug target like &quot;KRAS G12C&quot;, a gene like
-              &quot;BRCA1&quot;, or a disease like &quot;Triple-negative breast
-              cancer&quot;.
+              Try a drug target, gene, mutation, or disease above.
             </p>
           </div>
         )}
 
         {/* Footer */}
         <footer className="footer">
-          <p>
-            BioAgentic — Powered by Grok &amp; LangGraph
-          </p>
+          <p>Powered by Grok &amp; LangGraph</p>
         </footer>
       </main>
     </>

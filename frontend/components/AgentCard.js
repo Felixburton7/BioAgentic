@@ -1,15 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 const AGENT_STYLES = {
-    analyzer: { label: "Analyzer", className: "analyzer" },
-    target_analyzer: { label: "Analyzer", className: "analyzer" },
+    analyzer: { label: "Target Analyzer", className: "analyzer" },
+    target_analyzer: { label: "Target Analyzer", className: "analyzer" },
     trials_scout: { label: "Trials Scout", className: "trials" },
-    literature_miner: { label: "Literature", className: "literature" },
-    hypothesis_generator: { label: "Hypothesis", className: "hypothesis" },
-    hypothesis: { label: "Hypothesis", className: "hypothesis" },
+    literature_miner: { label: "Literature Miner", className: "literature" },
+    hypothesis_generator: { label: "Hypothesis Generator", className: "hypothesis" },
+    hypothesis: { label: "Hypothesis Generator", className: "hypothesis" },
     advocate: { label: "Advocate", className: "advocate" },
     skeptic: { label: "Skeptic", className: "skeptic" },
     mediator: { label: "Mediator", className: "mediator" },
@@ -18,7 +19,8 @@ const AGENT_STYLES = {
 };
 
 function getAgentStyle(agentName) {
-    const key = agentName?.toLowerCase().replace(/\s+/g, "_");
+    // Try exact match first, then normalised key
+    const key = agentName?.toLowerCase().replace(/\s*\(r\d+\)/g, "").replace(/\s+/g, "_").trim();
     return AGENT_STYLES[key] || { label: agentName || "Agent", className: "analyzer" };
 }
 
@@ -36,16 +38,37 @@ function formatTime(timestamp) {
     }
 }
 
-export default function AgentCard({ agent, content, timestamp }) {
+const Chevron = ({ open }) => (
+    <svg
+        className={`chevron ${open ? "open" : ""}`}
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+    >
+        <polyline points="9 18 15 12 9 6" />
+    </svg>
+);
+
+export default function AgentCard({ agent, content, timestamp, defaultOpen = true }) {
+    const [isOpen, setIsOpen] = useState(defaultOpen);
     const style = getAgentStyle(agent);
 
     return (
         <div className="agent-card">
-            <div className="agent-card-header">
-                <span className={`agent-badge ${style.className}`}>{style.label}</span>
+            <div className="agent-card-header" onClick={() => setIsOpen(!isOpen)}>
+                <Chevron open={isOpen} />
+                <span className="agent-badge">
+                    <span className={`agent-badge-dot ${style.className}`} />
+                    {agent || style.label}
+                </span>
                 <span className="agent-timestamp">{formatTime(timestamp)}</span>
             </div>
-            <div className="agent-card-content">
+            <div className={`agent-card-content ${isOpen ? "" : "collapsed"}`}>
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
             </div>
         </div>

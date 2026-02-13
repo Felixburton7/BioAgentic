@@ -68,7 +68,7 @@ export default function AgentStream({ messages, isDone, error }) {
                 </div>
             )}
 
-            {/* Agent cards */}
+            {/* Agent cards — most recent open, older collapsed */}
             <div className="agent-stream">
                 {messages.map((msg, i) => (
                     <AgentCard
@@ -76,6 +76,7 @@ export default function AgentStream({ messages, isDone, error }) {
                         agent={msg.agent}
                         content={msg.content}
                         timestamp={msg.timestamp}
+                        defaultOpen={i === messages.length - 1 || isDone}
                     />
                 ))}
             </div>
