@@ -2726,4 +2726,15 @@ body {
   color: var(--text-secondary);
 }
 
-/* End of globals.css */
+/* Disambiguation Box */
+.clarification-note-box {
+  background: var(--amber-subtle);
+  border: 1px solid rgba(181, 118, 42, 0.2);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  color: #8a5a1f;
+  /* Darker amber for text readability */
+  font-size: 15px;
+  line-height: 1.5;
+  margin-top: 4px;
+}

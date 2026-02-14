@@ -351,6 +351,7 @@ export default function Home() {
           focusQuestion: data.focus_question,
           focusOptions: data.focus_options,
           targetQuestion: data.target_question,
+          disambiguation: data.disambiguation,
           target,
           rounds
         });
@@ -426,6 +427,7 @@ export default function Home() {
               focusQuestion={clarificationData.focusQuestion}
               focusOptions={clarificationData.focusOptions}
               targetQuestion={clarificationData.targetQuestion}
+              disambiguation={clarificationData.disambiguation}
               onConfirm={handleClarificationConfirm}
               onBack={handleClarificationBack}
             />

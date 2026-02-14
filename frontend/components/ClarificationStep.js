@@ -6,6 +6,7 @@ export default function ClarificationStep({
     focusQuestion,
     focusOptions,
     targetQuestion,
+    disambiguation,
     onConfirm,
     onBack,
 }) {
@@ -105,6 +106,18 @@ export default function ClarificationStep({
                         onChange={(e) => setTargetAnswer(e.target.value)}
                     />
                 </div>
+
+                {/* Section 3: Disambiguation (Conditional) */}
+                {disambiguation && (
+                    <div className="clarification-section">
+                        <h3 className="clarification-section-title" style={{ fontSize: '18px', color: '#b5762a' }}>
+                            Did you mean?
+                        </h3>
+                        <div className="clarification-note-box">
+                            <p>{disambiguation}</p>
+                        </div>
+                    </div>
+                )}
 
                 {/* Submit Action */}
                 <div className="clarification-submit-wrapper">
