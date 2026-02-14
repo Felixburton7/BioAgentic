@@ -2482,3 +2482,224 @@ body {
     flex-wrap: wrap;
   }
 }
+
+/* ================================================================
+   Clarification Document Style (Refined UI)
+   ================================================================ */
+
+.clarification-overlay {
+  position: fixed;
+  /* Fixed to cover the main content area */
+  top: 48px;
+  /* Below navbar */
+  left: var(--sidebar-width);
+  width: calc(100% - var(--sidebar-width));
+  height: calc(100vh - 48px);
+  background: var(--bg-primary);
+  z-index: 50;
+  padding: var(--space-xl);
+  overflow-y: auto;
+  /* Allow scrolling if long */
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+/* Adjust overlay if sidebar is collapsed */
+.main-content.sidebar-collapsed .clarification-overlay {
+  left: 0;
+  width: 100%;
+}
+
+.clarification-document {
+  max-width: 720px;
+  width: 100%;
+  animation: fadeIn 0.4s ease-out;
+  padding-bottom: 100px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.clarification-header {
+  margin-bottom: var(--space-xl);
+}
+
+.clarification-header p {
+  font-size: 16px;
+  color: var(--text-secondary);
+}
+
+.clarification-form-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xl);
+}
+
+.clarification-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.clarification-section-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.clarification-question-text {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Radio Options */
+.clarification-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-top: var(--space-sm);
+}
+
+.clarification-radio-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  transition: background 0.1s;
+  border: 1px solid transparent;
+}
+
+.clarification-radio-item:hover {
+  background: var(--bg-hover);
+}
+
+.clarification-radio-item.selected {
+  background: #fff;
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.hidden-radio {
+  display: none;
+}
+
+.radio-circle {
+  width: 20px;
+  height: 20px;
+  border: 1px solid #ccc;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  background: white;
+}
+
+.clarification-radio-item:hover .radio-circle {
+  border-color: var(--text-primary);
+}
+
+.clarification-radio-item.selected .radio-circle {
+  border-color: var(--text-primary);
+  background: var(--text-primary);
+}
+
+.radio-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: white;
+}
+
+.radio-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.radio-label {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 15px;
+}
+
+.radio-desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* Text Input */
+.clarification-text-input {
+  width: 100%;
+  padding: 16px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  color: var(--text-primary);
+}
+
+.clarification-text-input:focus {
+  border-color: var(--text-primary);
+  box-shadow: 0 0 0 2px rgba(26, 26, 26, 0.05);
+}
+
+/* Submit Button */
+.clarification-submit-wrapper {
+  margin-top: var(--space-lg);
+  display: flex;
+  justify-content: flex-start;
+}
+
+.btn-bio-submit {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ECEEBA;
+  /* Approx match to user screenshot yellowish-beige */
+  color: #4A4A35;
+  border: 1px solid #E0E2AE;
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-bio-submit:hover {
+  background: #E6E8B0;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.btn-bio-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  filter: grayscale(0.5);
+}
