@@ -12,9 +12,9 @@
 
 <br/>
 
-BioAgentic is an open-source tool that acts as a tireless research partner. It reads the papers you don't have time for, checks the trials you missed, and debates hypotheses to keep you honest.
+BioAgentic is an open-source tool that acts as a research partner. It reads the papers checks the trials data, and debates hypotheses to keep it accurate & honest.
 
-We built this because we were tired of "black box" AI tools that give answers without showing the work. BioAgentic is open, transparent, and designed to help you think faster, not just retrieve links. It runs locally, respects your privacy, and actually cites its sources.
+We built this because as "black box" AI tools that give answers without showing the work. BioAgentic is open, transparent, and designed to help you think faster, not just retrieve links. It can run locally, respects privacy, and cites its sources.
 
 ## Quick Start
 Get up and running in seconds. You'll need Python 3.11+, Node 18+, and a Grok API key.
@@ -46,7 +46,7 @@ graph LR
     D --> E[Final Brief]
 ```
 
-1.  **Scout**: Agents mine ClinicalTrials.gov and academic literature (PubMed, Semantic Scholar).
+1.  **Scout**: Agents mine real-time data from the **ClinicalTrials.gov API v2**, extracting key details like recruitment status, enrollment numbers, sponsors, and conditions. They also cross-reference this with academic literature (PubMed, Semantic Scholar).
 2.  **Hypothesize**: It generates novel hypotheses based on the raw data.
 3.  **Debate**: An "Advocate" and a "Skeptic" agent debate these hypotheses in rounds, with a Mediator keeping them on track. This adversarial process kills hallucinations and sharpens arguments.
 4.  **Synthesize**: You get a clean, cited research brief.
