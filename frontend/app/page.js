@@ -193,9 +193,13 @@ export default function Home() {
       setConversations((prev) => [newConv, ...prev]);
       setActiveConversationId(convId);
 
-      const API = process.env.NEXT_PUBLIC_API_URL || "";
+      // SSE streams must bypass the Next.js rewrite proxy (it buffers the
+      // entire response).  Use the public API URL if set, otherwise call the
+      // backend directly on localhost.
+      const STREAM_API =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-      fetch(`${API}/research/stream`, {
+      fetch(`${STREAM_API}/research/stream`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ target, rounds, clarification }),

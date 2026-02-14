@@ -1347,6 +1347,67 @@ body {
   margin-bottom: var(--space-lg);
 }
 
+/* --- Collapsible thought process wrapper (final output) --- */
+.agent-thoughts {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  animation: fadeIn 0.3s ease forwards;
+  opacity: 0;
+}
+
+.agent-thoughts-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: 12px var(--space-md);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--transition-fast), color var(--transition-fast);
+  list-style: none;
+}
+
+.agent-thoughts-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.agent-thoughts-toggle::marker {
+  display: none;
+  content: "";
+}
+
+.agent-thoughts-toggle:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.agent-thoughts-icon {
+  color: var(--text-faint);
+  flex-shrink: 0;
+  transition: color var(--transition-fast);
+}
+
+.agent-thoughts[open] .agent-thoughts-icon {
+  color: var(--accent-olive);
+}
+
+.agent-thoughts-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 var(--space-sm) var(--space-sm);
+}
+
+.agent-thoughts-content .agent-card {
+  border: 1px solid var(--border);
+}
+
 .agent-card {
   background: var(--bg-secondary);
   border: 1px solid var(--border);
