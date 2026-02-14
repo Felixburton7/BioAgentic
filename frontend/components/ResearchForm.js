@@ -25,8 +25,8 @@ const RESOURCES = [
 const ALLOWED_EXTENSIONS = [".txt", ".csv", ".tsv", ".json", ".fasta", ".fa", ".pdb", ".pdf", ".md"];
 const ALLOWED_MIME_HINT = ".txt,.csv,.tsv,.json,.fasta,.fa,.pdb,.pdf,.md";
 
-export default function ResearchForm({ onSubmit, isStreaming, fillPrompt, onPromptFilled, initialValue }) {
-    const [target, setTarget] = useState(initialValue || "");
+export default function ResearchForm({ onSubmit, isStreaming, fillPrompt, onPromptFilled }) {
+    const [target, setTarget] = useState("");
     const [rounds, setRounds] = useState(2);
     const [showMentionPopup, setShowMentionPopup] = useState(false);
     const [mentionSearch, setMentionSearch] = useState("");
@@ -53,20 +53,6 @@ export default function ResearchForm({ onSubmit, isStreaming, fillPrompt, onProm
             }, 0);
         }
     }, [fillPrompt, onPromptFilled]);
-
-    // Update target if initialValue changes (e.g. switching conversations)
-    useEffect(() => {
-        if (initialValue) {
-            setTarget(initialValue);
-            // Auto-resize textarea
-            setTimeout(() => {
-                if (textareaRef.current) {
-                    textareaRef.current.style.height = "auto";
-                    textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
-                }
-            }, 0);
-        }
-    }, [initialValue]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
