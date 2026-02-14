@@ -6,7 +6,8 @@ export default function ClarificationStep({
     focusQuestion,
     focusOptions,
     targetQuestion,
-    onConfirm
+    onConfirm,
+    onBack,
 }) {
     const [selectedFocusId, setSelectedFocusId] = useState("");
     const [targetAnswer, setTargetAnswer] = useState("");
@@ -107,6 +108,15 @@ export default function ClarificationStep({
 
                 {/* Submit Action */}
                 <div className="clarification-submit-wrapper">
+                    {onBack && (
+                        <button
+                            type="button"
+                            className="btn-bio-back"
+                            onClick={onBack}
+                        >
+                            Back
+                        </button>
+                    )}
                     <button
                         type="submit"
                         className="btn-bio-submit"

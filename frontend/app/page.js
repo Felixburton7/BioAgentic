@@ -379,12 +379,16 @@ export default function Home() {
     startResearchStream({ target, rounds, clarification: clarificationResponse });
   }, [clarificationData, startResearchStream]);
 
-  const handleClarificationCancel = useCallback(() => {
+  const handleClarificationBack = useCallback(() => {
+    // If going back, pre-fill with the original prompt so user can edit
+    if (clarificationData?.target) {
+      setPendingPrompt(clarificationData.target);
+    }
     setIsClarifying(false);
     setClarificationData(null);
     setResearchActive(false); // Go back to home
     setIsStreaming(false);
-  }, []);
+  }, [clarificationData]);
 
 
 
@@ -423,6 +427,7 @@ export default function Home() {
               focusOptions={clarificationData.focusOptions}
               targetQuestion={clarificationData.targetQuestion}
               onConfirm={handleClarificationConfirm}
+              onBack={handleClarificationBack}
             />
           </div>
         )}

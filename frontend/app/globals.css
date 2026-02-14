@@ -2704,3 +2704,25 @@ body {
   box-shadow: none;
   filter: grayscale(0.5);
 }
+
+.btn-bio-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid transparent;
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-right: var(--space-sm);
+}
+
+.btn-bio-back:hover {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+}
+}
