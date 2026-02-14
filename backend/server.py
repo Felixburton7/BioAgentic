@@ -104,14 +104,16 @@ app.add_middleware(
 
 
 
-# ---------------------------------------------------------------------------
-# Clarification Models
-# ---------------------------------------------------------------------------
+class ClarificationOption(BaseModel):
+    id: str
+    label: str
+    description: str
 
 class ClarificationResponse(BaseModel):
     """Response from the clarification endpoint."""
-    question: str
-    options: List[str]
+    focus_question: str
+    focus_options: List[ClarificationOption]
+    target_question: str
 
 
 def _build_initial_state(target: str, rounds: int, clarification: str = "") -> dict:
@@ -194,15 +196,20 @@ async def clarify_research(req: ResearchRequest):
         # Parse JSON
         data = json.loads(response_json)
         return ClarificationResponse(
-            question=data.get("question", f"What about {req.target} interests you?"),
-            options=data.get("options", ["General overview", "Clinical focus", "Mechanism of action", "Other"])
+            focus_question=data.get("focus_question", f"What aspect of {req.target} interests you?"),
+            focus_options=[ClarificationOption(**opt) for opt in data.get("focus_options", [])],
+            target_question=data.get("target_question", "Any specific drug or trial?")
         )
     except Exception as e:
         logger.error(f"Clarification error: {e}")
-        # Fallback if LLM fails
+        # Fallback
         return ClarificationResponse(
-            question=f"What specific aspect of {req.target} do you want to research?",
-            options=["Efficacy", "Safety", "Market landscape", "Everything"]
+            focus_question=f"What aspect of {req.target} interests you?",
+            focus_options=[
+                ClarificationOption(id="general", label="General Overview", description="Broad summary."),
+                ClarificationOption(id="clinical", label="Clinical Data", description="Trials and results.")
+            ],
+            target_question="Any specific details?"
         )
 
 

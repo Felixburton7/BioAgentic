@@ -107,12 +107,13 @@ export default function Home() {
   const [researchActive, setResearchActive] = useState(false);
 
   // Clarification state
-  const [clarificationData, setClarificationData] = useState(null); // { question, options, target, rounds }
+  const [clarificationData, setClarificationData] = useState(null); // { focus_question, focus_options, target_question, target, rounds }
   const [isClarifying, setIsClarifying] = useState(false);
 
   // Conversation history — stored in state, persists within session
   const [conversations, setConversations] = useState([]);
   const [activeConversationId, setActiveConversationId] = useState(null);
+  const [activeTarget, setActiveTarget] = useState("");
 
   const eventSourceRef = useRef(null);
 
@@ -146,6 +147,7 @@ export default function Home() {
     setResearchActive(false);
     setClarificationData(null);
     setIsClarifying(false);
+    setActiveTarget("");
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
@@ -163,6 +165,7 @@ export default function Home() {
       setError("");
       setIsStreaming(false);
       setActiveConversationId(id);
+      setActiveTarget(conv.target || "");
       // Always show the research view when clicking a session
       setResearchActive(true);
     },
@@ -175,6 +178,7 @@ export default function Home() {
       // 1. Reset previous state
       handleReset();
       setResearchActive(true); // Switch to "active" view immediately
+      setActiveTarget(target);
       setError("");
 
       // 2. Start Clarification Phase
@@ -192,8 +196,9 @@ export default function Home() {
 
         // 3. Show Clarification Step
         setClarificationData({
-          question: data.question,
-          options: data.options,
+          focusQuestion: data.focus_question,
+          focusOptions: data.focus_options,
+          targetQuestion: data.target_question,
           target,
           rounds
         });
@@ -403,12 +408,14 @@ export default function Home() {
   return (
     <div className="app-layout">
       {isClarifying && clarificationData && (
-        <ClarificationStep
-          question={clarificationData.question}
-          options={clarificationData.options}
-          onConfirm={handleClarificationConfirm}
-          onCancel={handleClarificationCancel}
-        />
+        <div className="clarification-overlay">
+          <ClarificationStep
+            focusQuestion={clarificationData.focusQuestion}
+            focusOptions={clarificationData.focusOptions}
+            targetQuestion={clarificationData.targetQuestion}
+            onConfirm={handleClarificationConfirm}
+          />
+        </div>
       )}
 
       <Sidebar
@@ -497,7 +504,7 @@ export default function Home() {
                 </button>
               </div>
 
-              <ResearchForm onSubmit={handleSubmit} isStreaming={isStreaming} />
+              <ResearchForm onSubmit={handleSubmit} isStreaming={isStreaming} fillPrompt={activeTarget} />
 
               {/* Error display */}
               {error && (
