@@ -9,6 +9,19 @@ from typing import Any, Dict, List
 from typing_extensions import TypedDict
 
 
+class SearchCriteria(TypedDict, total=False):
+    """Structured search specification produced by the analyzer agent.
+
+    Contains parsed primary concepts (conditions, interventions, gene/target),
+    nice-to-have filters (population, study design, geography, etc.),
+    pre-built search queries for each API, and a narrative summary.
+    """
+    primary_concepts: dict       # conditions, interventions, gene_target
+    nice_to_have_filters: dict   # population, study_design, geography, status, dates
+    search_queries: dict         # clinicaltrials_condition, pubmed_query, etc.
+    narrative_summary: str       # Plain-English summary of what was parsed
+
+
 class APIData(TypedDict, total=False):
     """Raw results from external API calls."""
     trials: str       # Formatted clinical trials summary
@@ -41,7 +54,8 @@ class BiotechState(TypedDict, total=False):
     clarification: str          # User's clarification response (optional)
 
     # Intermediate
-    analysis: str               # Target analyzer output
+    analysis: str               # Target analyzer output (narrative summary)
+    search_criteria: SearchCriteria  # Structured search spec from analyzer
     api_data: APIData           # Raw API results
     hypotheses: str             # Generated hypotheses text
     debate: DebateState         # Debate tracking

@@ -123,6 +123,7 @@ def _build_initial_state(target: str, rounds: int, clarification: str = "") -> d
         "target": target,
         "clarification": clarification,
         "analysis": "",
+        "search_criteria": {},
         "api_data": {},
         "hypotheses": "",
         "debate": {

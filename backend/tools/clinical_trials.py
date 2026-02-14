@@ -8,7 +8,11 @@ import requests
 from ..config import MAX_API_TIMEOUT
 
 
-def fetch_trials(target: str, max_results: int = 10) -> str:
+def fetch_trials(
+    target: str,
+    max_results: int = 10,
+    intervention: str | None = None,
+) -> str:
     """
     Search ClinicalTrials.gov for studies matching a target/condition.
 
@@ -16,17 +20,20 @@ def fetch_trials(target: str, max_results: int = 10) -> str:
     https://clinicaltrials.gov/data-api/api
 
     Args:
-        target: Search term (e.g. "KRAS G12C", "lung cancer", "sotorasib").
+        target: Search term for the condition field (e.g. "KRAS G12C", "lung cancer").
         max_results: Maximum number of studies to return.
+        intervention: Optional intervention/drug search term for the intervention field.
 
     Returns:
         Formatted markdown string with trial summaries.
     """
     try:
-        params = {
+        params: dict = {
             "query.cond": target,
             "pageSize": max_results,
         }
+        if intervention:
+            params["query.intr"] = intervention
         resp = requests.get(
             "https://clinicaltrials.gov/api/v2/studies",
             params=params,

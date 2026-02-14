@@ -42,6 +42,7 @@ def call_llm(
     user_prompt: str,
     model: str = DEFAULT_MODEL,
     temperature: float = DEFAULT_TEMPERATURE,
+    json_mode: bool = False,
 ) -> str:
     """
     Call the LLM via LiteLLM. Adapted from backend/main.py's call_llm.
@@ -51,6 +52,7 @@ def call_llm(
         user_prompt: User-level context / data to process.
         model: LiteLLM model string (default: Grok via xAI).
         temperature: Sampling temperature.
+        json_mode: If True, request structured JSON output.
 
     Returns:
         The assistant's text response.
@@ -61,11 +63,15 @@ def call_llm(
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_prompt},
     ]
-    resp = completion(
-        model=model,
-        messages=messages,
-        temperature=temperature,
-    )
+    kwargs: dict = {
+        "model": model,
+        "messages": messages,
+        "temperature": temperature,
+    }
+    if json_mode:
+        kwargs["response_format"] = {"type": "json_object"}
+
+    resp = completion(**kwargs)
     content = resp.choices[0].message.content
     return content.strip() if content else ""
 
@@ -75,9 +81,10 @@ async def acall_llm(
     user_prompt: str,
     model: str = DEFAULT_MODEL,
     temperature: float = DEFAULT_TEMPERATURE,
+    json_mode: bool = False,
 ) -> str:
     """Async wrapper — runs call_llm in a thread to avoid blocking."""
     import asyncio
     return await asyncio.to_thread(
-        call_llm, system_prompt, user_prompt, model, temperature
+        call_llm, system_prompt, user_prompt, model, temperature, json_mode
     )
