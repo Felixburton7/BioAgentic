@@ -105,6 +105,7 @@ export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [pendingPrompt, setPendingPrompt] = useState("");
   const [researchActive, setResearchActive] = useState(false);
+  const [currentQuery, setCurrentQuery] = useState("");
 
   // Clarification state
   const [clarificationData, setClarificationData] = useState(null); // { question, options, target, rounds }
@@ -144,6 +145,7 @@ export default function Home() {
     setIsStreaming(false);
     setActiveConversationId(null);
     setResearchActive(false);
+    setCurrentQuery("");
     setClarificationData(null);
     setIsClarifying(false);
     if (eventSourceRef.current) {
@@ -163,8 +165,10 @@ export default function Home() {
       setError("");
       setIsStreaming(false);
       setActiveConversationId(id);
+      setActiveConversationId(id);
       // Always show the research view when clicking a session
       setResearchActive(true);
+      setCurrentQuery(conv.target);
     },
     [conversations]
   );
@@ -175,6 +179,7 @@ export default function Home() {
       // 1. Reset previous state
       handleReset();
       setResearchActive(true); // Switch to "active" view immediately
+      setCurrentQuery(target);
       setError("");
 
       // 2. Start Clarification Phase
@@ -497,7 +502,7 @@ export default function Home() {
                 </button>
               </div>
 
-              <ResearchForm onSubmit={handleSubmit} isStreaming={isStreaming} />
+              <ResearchForm onSubmit={handleSubmit} isStreaming={isStreaming} initialValue={currentQuery} />
 
               {/* Error display */}
               {error && (
