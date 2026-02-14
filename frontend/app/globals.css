@@ -2503,6 +2503,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: flex-start;
+  transition: left var(--transition-slow), width var(--transition-slow);
 }
 
 /* Adjust overlay if sidebar is collapsed */

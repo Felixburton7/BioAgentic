@@ -172,69 +172,6 @@ export default function Home() {
     [conversations]
   );
 
-  /* ─── Submit (starts clarification first) ─── */
-  const handleSubmit = useCallback(
-    async ({ target, rounds }) => {
-      // 1. Reset previous state
-      handleReset();
-      setResearchActive(true); // Switch to "active" view immediately
-      setActiveTarget(target);
-      setError("");
-
-      // 2. Start Clarification Phase
-      setIsStreaming(true); // Show loading spinner on form temporarily
-
-      const API = process.env.NEXT_PUBLIC_API_URL || "";
-      try {
-        const res = await fetch(`${API}/research/clarify`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ target, rounds }),
-        });
-        if (!res.ok) throw new Error("Failed to get clarification");
-        const data = await res.json();
-
-        // 3. Show Clarification Step
-        setClarificationData({
-          focusQuestion: data.focus_question,
-          focusOptions: data.focus_options,
-          targetQuestion: data.target_question,
-          target,
-          rounds
-        });
-        setIsClarifying(true);
-        setIsStreaming(false); // Stop spinner, show modal
-
-      } catch (err) {
-        // Fallback: start research directly if clarification fails
-        console.error("Clarification failed, skipping:", err);
-        startResearchStream({ target, rounds, clarification: "" });
-      }
-    },
-    [handleReset]
-  );
-
-  /* ─── Confirm Clarification & Start Stream ─── */
-  const handleClarificationConfirm = useCallback((clarificationResponse) => {
-    if (!clarificationData) return;
-    const { target, rounds } = clarificationData;
-
-    // Hide modal
-    setIsClarifying(false);
-    setClarificationData(null);
-
-    // Start actual research
-    startResearchStream({ target, rounds, clarification: clarificationResponse });
-  }, [clarificationData]);
-
-  const handleClarificationCancel = useCallback(() => {
-    setIsClarifying(false);
-    setClarificationData(null);
-    setResearchActive(false); // Go back to home
-    setIsStreaming(false);
-  }, []);
-
-
   /* ─── Start Research Stream (Actual Pipeline) ─── */
   const startResearchStream = useCallback(
     ({ target, rounds, clarification }) => {
@@ -388,6 +325,69 @@ export default function Home() {
     },
     [handleReset]
   );
+  const handleSubmit = useCallback(
+    async ({ target, rounds }) => {
+      // 1. Reset previous state
+      handleReset();
+      setResearchActive(true); // Switch to "active" view immediately
+      setActiveTarget(target);
+      setError("");
+
+      // 2. Start Clarification Phase
+      setIsStreaming(true); // Show loading spinner on form temporarily
+
+      const API = process.env.NEXT_PUBLIC_API_URL || "";
+      try {
+        const res = await fetch(`${API}/research/clarify`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ target, rounds }),
+        });
+        if (!res.ok) throw new Error("Failed to get clarification");
+        const data = await res.json();
+
+        // 3. Show Clarification Step
+        setClarificationData({
+          focusQuestion: data.focus_question,
+          focusOptions: data.focus_options,
+          targetQuestion: data.target_question,
+          target,
+          rounds
+        });
+        setIsClarifying(true);
+        setIsStreaming(false); // Stop spinner, show modal
+
+      } catch (err) {
+        // Fallback: start research directly if clarification fails
+        console.error("Clarification failed, skipping:", err);
+        startResearchStream({ target, rounds, clarification: "" });
+      }
+    },
+    [handleReset]
+  );
+
+  /* ─── Confirm Clarification & Start Stream ─── */
+  const handleClarificationConfirm = useCallback((clarificationResponse) => {
+    if (!clarificationData) return;
+    const { target, rounds } = clarificationData;
+
+    // Hide modal
+    setIsClarifying(false);
+    setClarificationData(null);
+
+    // Start actual research
+    startResearchStream({ target, rounds, clarification: clarificationResponse });
+  }, [clarificationData, startResearchStream]);
+
+  const handleClarificationCancel = useCallback(() => {
+    setIsClarifying(false);
+    setClarificationData(null);
+    setResearchActive(false); // Go back to home
+    setIsStreaming(false);
+  }, []);
+
+
+
 
   // Update timeAgo every 30s
   useEffect(() => {

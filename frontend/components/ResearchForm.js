@@ -43,16 +43,16 @@ export default function ResearchForm({ onSubmit, isStreaming, fillPrompt, onProm
         if (fillPrompt) {
             setTarget(fillPrompt);
             if (onPromptFilled) onPromptFilled();
-            // Auto-resize textarea
-            setTimeout(() => {
-                if (textareaRef.current) {
-                    textareaRef.current.style.height = "auto";
-                    textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
-                    textareaRef.current.focus();
-                }
-            }, 0);
         }
     }, [fillPrompt, onPromptFilled]);
+
+    // Auto-resize textarea when target changes
+    useEffect(() => {
+        if (textareaRef.current) {
+            textareaRef.current.style.height = "auto";
+            textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
+        }
+    }, [target]);
 
     const handleSubmit = (e) => {
         e.preventDefault();

@@ -1,10 +1,12 @@
 "use client";
 
+import Link from "next/link";
+
 export default function Navbar({ isStreaming }) {
     return (
         <nav className="navbar">
             <div className="navbar-left">
-                <a href="/" className="navbar-brand">
+                <Link href="/" className="navbar-brand">
                     <svg
                         width="18"
                         height="18"
@@ -20,7 +22,7 @@ export default function Navbar({ isStreaming }) {
                         <path d="M5 17C5 17 8 20 12 20C16 20 19 17 19 17" />
                     </svg>
                     BioAgentic
-                </a>
+                </Link>
             </div>
             <div className="navbar-status">
                 <span className={`status-dot ${isStreaming ? "" : "inactive"}`} />

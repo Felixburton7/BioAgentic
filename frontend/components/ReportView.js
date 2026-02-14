@@ -143,8 +143,7 @@ function HeadingRenderer({ level, children }) {
    ReportView Component
    ================================================================ */
 export default function ReportView({ brief, target }) {
-    if (!brief) return null;
-
+    // Hooks must be called unconditionally
     const reportBodyRef = useRef(null);
     const [activeSection, setActiveSection] = useState("");
     const [expandedSources, setExpandedSources] = useState({});
@@ -162,6 +161,8 @@ export default function ReportView({ brief, target }) {
         }
         return grouped;
     }, [sources]);
+
+    // ... rest of hooks ...
 
     /* ─── Track active section on scroll ─── */
     useEffect(() => {
@@ -234,6 +235,8 @@ export default function ReportView({ brief, target }) {
         h2: ({ children }) => <HeadingRenderer level={2}>{children}</HeadingRenderer>,
         h3: ({ children }) => <HeadingRenderer level={3}>{children}</HeadingRenderer>,
     }), []);
+
+    if (!brief) return null;
 
     return (
         <div className="report-layout">

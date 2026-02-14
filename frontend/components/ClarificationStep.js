@@ -37,7 +37,7 @@ export default function ClarificationStep({
     return (
         <div className="clarification-document fade-in">
             <div className="clarification-header">
-                <p>Before I proceed, I'd like to clarify a few things:</p>
+                <p>Before I proceed, I&apos;d like to clarify a few things:</p>
             </div>
 
             <form onSubmit={handleSubmit} className="clarification-form-body">
