@@ -7,6 +7,7 @@ import ResearchForm from "@/components/ResearchForm";
 import ActivityTrace from "@/components/ActivityTrace";
 import AgentStream from "@/components/AgentStream";
 import ReportView from "@/components/ReportView";
+import ClarificationStep from "@/components/ClarificationStep";
 
 /* ─── Prompts that match what the pipeline actually does ─── */
 const SAMPLE_PROMPTS = [
@@ -105,6 +106,10 @@ export default function Home() {
   const [pendingPrompt, setPendingPrompt] = useState("");
   const [researchActive, setResearchActive] = useState(false);
 
+  // Clarification state
+  const [clarificationData, setClarificationData] = useState(null); // { question, options, target, rounds }
+  const [isClarifying, setIsClarifying] = useState(false);
+
   // Conversation history — stored in state, persists within session
   const [conversations, setConversations] = useState([]);
   const [activeConversationId, setActiveConversationId] = useState(null);
@@ -139,6 +144,8 @@ export default function Home() {
     setIsStreaming(false);
     setActiveConversationId(null);
     setResearchActive(false);
+    setClarificationData(null);
+    setIsClarifying(false);
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
@@ -162,12 +169,71 @@ export default function Home() {
     [conversations]
   );
 
-  /* ─── Submit ─── */
+  /* ─── Submit (starts clarification first) ─── */
   const handleSubmit = useCallback(
-    ({ target, rounds }) => {
+    async ({ target, rounds }) => {
+      // 1. Reset previous state
       handleReset();
+      setResearchActive(true); // Switch to "active" view immediately
+      setError("");
+
+      // 2. Start Clarification Phase
+      setIsStreaming(true); // Show loading spinner on form temporarily
+
+      const API = process.env.NEXT_PUBLIC_API_URL || "";
+      try {
+        const res = await fetch(`${API}/research/clarify`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ target, rounds }),
+        });
+        if (!res.ok) throw new Error("Failed to get clarification");
+        const data = await res.json();
+
+        // 3. Show Clarification Step
+        setClarificationData({
+          question: data.question,
+          options: data.options,
+          target,
+          rounds
+        });
+        setIsClarifying(true);
+        setIsStreaming(false); // Stop spinner, show modal
+
+      } catch (err) {
+        // Fallback: start research directly if clarification fails
+        console.error("Clarification failed, skipping:", err);
+        startResearchStream({ target, rounds, clarification: "" });
+      }
+    },
+    [handleReset]
+  );
+
+  /* ─── Confirm Clarification & Start Stream ─── */
+  const handleClarificationConfirm = useCallback((clarificationResponse) => {
+    if (!clarificationData) return;
+    const { target, rounds } = clarificationData;
+
+    // Hide modal
+    setIsClarifying(false);
+    setClarificationData(null);
+
+    // Start actual research
+    startResearchStream({ target, rounds, clarification: clarificationResponse });
+  }, [clarificationData]);
+
+  const handleClarificationCancel = useCallback(() => {
+    setIsClarifying(false);
+    setClarificationData(null);
+    setResearchActive(false); // Go back to home
+    setIsStreaming(false);
+  }, []);
+
+
+  /* ─── Start Research Stream (Actual Pipeline) ─── */
+  const startResearchStream = useCallback(
+    ({ target, rounds, clarification }) => {
       setIsStreaming(true);
-      setResearchActive(true);
 
       // Create new conversation entry
       const convId = Date.now().toString();
@@ -190,7 +256,7 @@ export default function Home() {
       fetch(`${API}/research/stream`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ target, rounds }),
+        body: JSON.stringify({ target, rounds, clarification }),
       })
         .then((resp) => {
           if (!resp.ok) throw new Error(`Server error ${resp.status}`);
@@ -336,6 +402,15 @@ export default function Home() {
 
   return (
     <div className="app-layout">
+      {isClarifying && clarificationData && (
+        <ClarificationStep
+          question={clarificationData.question}
+          options={clarificationData.options}
+          onConfirm={handleClarificationConfirm}
+          onCancel={handleClarificationCancel}
+        />
+      )}
+
       <Sidebar
         conversations={conversations}
         isOpen={sidebarOpen}

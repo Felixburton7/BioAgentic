@@ -38,6 +38,7 @@ class BiotechState(TypedDict, total=False):
     """
     # Input
     target: str                 # User's research target (e.g. "KRAS G12C")
+    clarification: str          # User's clarification response (optional)
 
     # Intermediate
     analysis: str               # Target analyzer output

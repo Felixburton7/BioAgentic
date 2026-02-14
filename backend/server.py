@@ -28,7 +28,8 @@ logger.info("FastAPI imported OK")
 
 try:
     from .graph import build_graph
-    from .config import DEFAULT_DEBATE_ROUNDS
+    from .config import DEFAULT_DEBATE_ROUNDS, acall_llm
+    from .prompts import CLARIFIER
     logger.info("Backend modules imported OK")
 except Exception as e:
     logger.error(f"Import error: {e}", exc_info=True)
@@ -64,6 +65,7 @@ class ResearchRequest(BaseModel):
     """Request body for the /research endpoint."""
     target: str
     rounds: Optional[int] = DEFAULT_DEBATE_ROUNDS
+    clarification: Optional[str] = None
 
 
 class AgentMessage(BaseModel):
@@ -101,10 +103,22 @@ app.add_middleware(
 )
 
 
-def _build_initial_state(target: str, rounds: int) -> dict:
+
+# ---------------------------------------------------------------------------
+# Clarification Models
+# ---------------------------------------------------------------------------
+
+class ClarificationResponse(BaseModel):
+    """Response from the clarification endpoint."""
+    question: str
+    options: List[str]
+
+
+def _build_initial_state(target: str, rounds: int, clarification: str = "") -> dict:
     """Create the initial state dict for the graph."""
     return {
         "target": target,
+        "clarification": clarification,
         "analysis": "",
         "api_data": {},
         "hypotheses": "",
@@ -143,7 +157,9 @@ async def run_research(req: ResearchRequest):
     """
     graph = build_graph(debate_rounds=req.rounds or DEFAULT_DEBATE_ROUNDS)
 
-    initial_state = _build_initial_state(req.target, req.rounds or DEFAULT_DEBATE_ROUNDS)
+    graph = build_graph(debate_rounds=req.rounds or DEFAULT_DEBATE_ROUNDS)
+
+    initial_state = _build_initial_state(req.target, req.rounds or DEFAULT_DEBATE_ROUNDS, req.clarification or "")
     thread_id = str(uuid.uuid4())
 
     try:
@@ -163,6 +179,33 @@ async def run_research(req: ResearchRequest):
     )
 
 
+@app.post("/research/clarify", response_model=ClarificationResponse)
+async def clarify_research(req: ResearchRequest):
+    """
+    Step 1: Ask the user a clarifying question before starting the pipeline.
+    """
+    try:
+        # Call LLM to get question and options
+        response_json = await acall_llm(
+            system_prompt=CLARIFIER.format(target=req.target), # Basic formatting, though CLARIFIER needs {target}
+            user_prompt=f"Target: {req.target}",
+            json_mode=True
+        )
+        # Parse JSON
+        data = json.loads(response_json)
+        return ClarificationResponse(
+            question=data.get("question", f"What about {req.target} interests you?"),
+            options=data.get("options", ["General overview", "Clinical focus", "Mechanism of action", "Other"])
+        )
+    except Exception as e:
+        logger.error(f"Clarification error: {e}")
+        # Fallback if LLM fails
+        return ClarificationResponse(
+            question=f"What specific aspect of {req.target} do you want to research?",
+            options=["Efficacy", "Safety", "Market landscape", "Everything"]
+        )
+
+
 @app.post("/research/stream")
 async def stream_research(req: ResearchRequest):
     """
@@ -171,7 +214,7 @@ async def stream_research(req: ResearchRequest):
     """
     async def event_generator():
         graph = build_graph(debate_rounds=req.rounds or DEFAULT_DEBATE_ROUNDS)
-        initial_state = _build_initial_state(req.target, req.rounds or DEFAULT_DEBATE_ROUNDS)
+        initial_state = _build_initial_state(req.target, req.rounds or DEFAULT_DEBATE_ROUNDS, req.clarification or "")
         thread_id = str(uuid.uuid4())
 
         # Emit the initial status for the first node

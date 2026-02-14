@@ -44,6 +44,7 @@ class TargetAnalyzer:
 
         user_prompt = (
             f"Analyze this biotech research target: {target}\n"
+            f"Clarification Context: {state.get('clarification', 'None')}\n"
             f"Gene/Target: {gene}\n"
             f"Mutation/Variant: {mutation or 'none specified'}"
         )

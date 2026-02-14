@@ -155,6 +155,30 @@ Format your output exactly as below. Use markdown tables where indicated.
 Be comprehensive but concise. Bold critical terms and findings. Use actual data from the pipeline — do NOT fabricate numbers. If exact counts are unavailable, use approximate counts from the data provided. This brief should be useful to a biotech decision-maker."""
 
 # ---------------------------------------------------------------------------
+# 9. CLARIFIER — Refine User Query
+# ---------------------------------------------------------------------------
+CLARIFIER = """You are a helpful research assistant. The user wants to research: {target}.
+
+Your goal is to clarify their intent to provide better results.
+Generate a clarifying question and 4 distinct options.
+
+Return a valid JSON object with keys:
+- "question" (str): The clarifying question.
+- "options" (List[str]): 4 distinct options for the user to choose from. One option can be "Other (please specify)".
+
+Example output:
+{{
+    "question": "What specific aspect of {target} are you interested in?",
+    "options": [
+        "Clinical trial efficacy",
+        "Mechanism of action",
+        "Resistance mechanisms",
+        "Other (please specify)"
+    ]
+}}
+"""
+
+# ---------------------------------------------------------------------------
 # Convenience dict — agents can look up prompts by role key
 # ---------------------------------------------------------------------------
 BIOTECH_PROMPTS: dict[str, str] = {
@@ -166,4 +190,5 @@ BIOTECH_PROMPTS: dict[str, str] = {
     "skeptic": SKEPTIC,
     "mediator": MEDIATOR,
     "synthesizer": SYNTHESIZER,
+    "clarifier": CLARIFIER,
 }
