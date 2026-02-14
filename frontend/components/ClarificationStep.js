@@ -16,8 +16,20 @@ export default function ClarificationStep({
         if (!selectedFocusId) return;
 
         // Combine into a single clarification string for the agent
-        const selectedOption = focusOptions.find(o => o.id === selectedFocusId);
-        const clarification = `Research Focus: ${selectedOption.label} (${selectedOption.description})\nSpecific Target Details: ${targetAnswer || "None provided"}`;
+        let focusLabel, focusDesc;
+
+        if (selectedFocusId === "other") {
+            focusLabel = "Other";
+            focusDesc = "Custom user focus";
+        } else {
+            const selectedOption = focusOptions.find(o => o.id === selectedFocusId);
+            // Guard against potential data sync issues
+            if (!selectedOption) return;
+            focusLabel = selectedOption.label;
+            focusDesc = selectedOption.description;
+        }
+
+        const clarification = `Research Focus: ${focusLabel} (${focusDesc})\nSpecific Target Details: ${targetAnswer || "None provided"}`;
 
         onConfirm(clarification);
     };
