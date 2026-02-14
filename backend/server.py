@@ -114,6 +114,7 @@ class ClarificationResponse(BaseModel):
     focus_question: str
     focus_options: List[ClarificationOption]
     target_question: str
+    disambiguation: Optional[str] = None
 
 
 def _build_initial_state(target: str, rounds: int, clarification: str = "") -> dict:
@@ -198,7 +199,8 @@ async def clarify_research(req: ResearchRequest):
         return ClarificationResponse(
             focus_question=data.get("focus_question", f"What aspect of {req.target} interests you?"),
             focus_options=[ClarificationOption(**opt) for opt in data.get("focus_options", [])],
-            target_question=data.get("target_question", "Any specific drug or trial?")
+            target_question=data.get("target_question", "Any specific drug or trial?"),
+            disambiguation=data.get("disambiguation")
         )
     except Exception as e:
         logger.error(f"Clarification error: {e}")

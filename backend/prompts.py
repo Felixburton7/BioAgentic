@@ -168,6 +168,7 @@ Return a valid JSON object with keys:
 - "focus_question" (str): e.g. "What aspect of {target} are you most interested in researching?"
 - "focus_options" (List[dict]): 4 distinct options. Each dict must have "id" (str), "label" (str), and "description" (str).
 - "target_question" (str): e.g. "Do you have a specific {target} intervention, drug, or trial you want to focus on?"
+- "disambiguation" (str, optional): A clarifying suggestion if likely ambiguous (e.g. "Did you mean HIV?").
 
 Example output:
 {{
@@ -194,8 +195,9 @@ Example output:
             "description": "Focus on specific demographics or resistance profiles."
         }}
     ],
-    "target_question": "Do you have a specific intervention, drug, or trial you want to focus on?"
-}}
+    "target_question": "Do you have a specific intervention, drug, or trial you want to focus on?",
+    "disambiguation": "Did you mean HIV (Human Immunodeficiency Virus) instead of generic AIDS? (Optional: only if term is ambiguous)"
+}
 """
 
 # ---------------------------------------------------------------------------
