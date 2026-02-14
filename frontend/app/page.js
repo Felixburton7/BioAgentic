@@ -407,17 +407,6 @@ export default function Home() {
 
   return (
     <div className="app-layout">
-      {isClarifying && clarificationData && (
-        <div className="clarification-overlay">
-          <ClarificationStep
-            focusQuestion={clarificationData.focusQuestion}
-            focusOptions={clarificationData.focusOptions}
-            targetQuestion={clarificationData.targetQuestion}
-            onConfirm={handleClarificationConfirm}
-          />
-        </div>
-      )}
-
       <Sidebar
         conversations={conversations}
         isOpen={sidebarOpen}
@@ -427,6 +416,17 @@ export default function Home() {
       />
 
       <div className={`main-content ${!sidebarOpen ? "sidebar-collapsed" : ""}`}>
+        {isClarifying && clarificationData && (
+          <div className="clarification-overlay">
+            <ClarificationStep
+              focusQuestion={clarificationData.focusQuestion}
+              focusOptions={clarificationData.focusOptions}
+              targetQuestion={clarificationData.targetQuestion}
+              onConfirm={handleClarificationConfirm}
+            />
+          </div>
+        )}
+
         <Navbar isStreaming={isStreaming} />
 
         <main className={`page-container ${brief ? "page-container-wide" : ""}`}>
