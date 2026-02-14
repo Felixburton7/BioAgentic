@@ -41,6 +41,7 @@ export default function ResearchForm({ onSubmit, isStreaming, fillPrompt, onProm
     // Fill target from sample prompt clicks
     useEffect(() => {
         if (fillPrompt) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setTarget(fillPrompt);
             if (onPromptFilled) onPromptFilled();
         }

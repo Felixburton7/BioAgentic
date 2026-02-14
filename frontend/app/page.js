@@ -323,7 +323,7 @@ export default function Home() {
           setIsStreaming(false);
         });
     },
-    [handleReset]
+    []
   );
   const handleSubmit = useCallback(
     async ({ target, rounds }) => {
@@ -363,7 +363,7 @@ export default function Home() {
         startResearchStream({ target, rounds, clarification: "" });
       }
     },
-    [handleReset]
+    [handleReset, startResearchStream]
   );
 
   /* ─── Confirm Clarification & Start Stream ─── */
