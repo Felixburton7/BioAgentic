@@ -123,7 +123,7 @@ class Synthesizer:
         brief = await acall_llm(
             system_prompt=BIOTECH_PROMPTS[self.PROMPT_KEY],
             user_prompt=full_context,
-            model=SYNTHESIZER_MODEL,
+            model=REASONING_MODEL,
         )
 
         return {

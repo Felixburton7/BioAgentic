@@ -8,6 +8,7 @@ import ActivityTrace from "@/components/ActivityTrace";
 import AgentStream from "@/components/AgentStream";
 import ReportView from "@/components/ReportView";
 import ClarificationStep from "@/components/ClarificationStep";
+import FollowUpBar from "@/components/FollowUpBar";
 
 /* ─── Prompts that match what the pipeline actually does ─── */
 const SAMPLE_PROMPTS = [
@@ -372,7 +373,13 @@ export default function Home() {
         if (!res.ok) throw new Error("Failed to get clarification");
         const data = await res.json();
 
-        // 3. Show Clarification Step
+        // 3. If query is specific enough, skip clarification and start directly
+        if (!data.needs_clarification) {
+          startResearchStream({ target, rounds, clarification: "" });
+          return;
+        }
+
+        // 4. Show Clarification Step for vague queries
         setClarificationData({
           focusQuestion: data.focus_question,
           focusOptions: data.focus_options,
@@ -613,6 +620,9 @@ export default function Home() {
 
               <AgentStream messages={messages} isDone={!isStreaming && messages.length > 0} error={""} />
               {brief && <ReportView brief={brief} />}
+              {brief && !isStreaming && (
+                <FollowUpBar brief={brief} target={activeTarget} />
+              )}
 
               {/* Empty state for past sessions that had no data */}
               {!isStreaming && messages.length === 0 && !brief && !error && (

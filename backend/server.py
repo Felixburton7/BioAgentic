@@ -28,8 +28,8 @@ logger.info("FastAPI imported OK")
 
 try:
     from .graph import build_graph
-    from .config import DEFAULT_DEBATE_ROUNDS, acall_llm
-    from .prompts import CLARIFIER
+    from .config import DEFAULT_DEBATE_ROUNDS, acall_llm, REASONING_MODEL
+    from .prompts import CLARIFIER, BIOTECH_PROMPTS
     logger.info("Backend modules imported OK")
 except Exception as e:
     logger.error(f"Import error: {e}", exc_info=True)
@@ -111,6 +111,7 @@ class ClarificationOption(BaseModel):
 
 class ClarificationResponse(BaseModel):
     """Response from the clarification endpoint."""
+    needs_clarification: bool = True
     focus_question: str
     focus_options: List[ClarificationOption]
     target_question: str
@@ -198,6 +199,7 @@ async def clarify_research(req: ResearchRequest):
         # Parse JSON
         data = json.loads(response_json)
         return ClarificationResponse(
+            needs_clarification=data.get("needs_clarification", True),
             focus_question=data.get("focus_question", f"What aspect of {req.target} interests you?"),
             focus_options=[ClarificationOption(**opt) for opt in data.get("focus_options", [])],
             target_question=data.get("target_question", "Any specific drug or trial?"),
@@ -205,8 +207,9 @@ async def clarify_research(req: ResearchRequest):
         )
     except Exception as e:
         logger.error(f"Clarification error: {e}")
-        # Fallback
+        # Fallback — assume clarification needed if LLM call fails
         return ClarificationResponse(
+            needs_clarification=True,
             focus_question=f"What aspect of {req.target} interests you?",
             focus_options=[
                 ClarificationOption(id="general", label="General Overview", description="Broad summary."),
@@ -275,6 +278,96 @@ async def stream_research(req: ResearchRequest):
             yield f"data: {json.dumps({'event': 'error', 'detail': str(e)})}\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
+class FollowUpRequest(BaseModel):
+    """Request for a follow-up question about completed research."""
+    target: str
+    question: str
+    context: str  # The original brief
+    rounds: int = 1  # Number of debate rounds
+
+
+@app.post("/research/followup")
+async def followup_research(req: FollowUpRequest):
+    """
+    Run a structured follow-up analysis:
+      1. Query Analyzer (reasoning model) — decompose the question
+      2. N rounds of Advocate → Skeptic → Mediator debate
+      3. Synthesizer (reasoning model) — polished final answer
+    Streams each step as SSE events.
+    """
+    async def event_generator():
+        full_context = (
+            f"# Original Research Brief\n{req.context}\n\n"
+            f"# Follow-Up Question\n{req.question}"
+        )
+        debate_history = ""
+        node_start = time.time()
+
+        try:
+            # ── Step 1: Query Analyzer (reasoning model) ──
+            yield f"data: {json.dumps({'event': 'status', 'node': 'followup', 'message': 'Analyzing follow-up question…'})}\n\n"
+
+            analysis = await acall_llm(
+                system_prompt=BIOTECH_PROMPTS["followup_analyzer"],
+                user_prompt=full_context,
+                model=REASONING_MODEL,
+            )
+            debate_history += f"### Query Analysis\n{analysis}"
+            duration = round(time.time() - node_start, 1)
+            node_start = time.time()
+
+            yield f"data: {json.dumps({'node': 'followup', 'agent': 'Follow-Up Analyzer', 'content': analysis, 'timestamp': datetime.utcnow().isoformat()})}\n\n"
+            yield f"data: {json.dumps({'event': 'node_complete', 'node': 'followup_analyzer', 'duration': duration})}\n\n"
+
+            # ── Step 2: Debate rounds (Advocate → Skeptic → Mediator) × N ──
+            num_rounds = max(1, min(req.rounds, 5))  # clamp 1-5
+            for r in range(1, num_rounds + 1):
+                round_label = f"Round {r}/{num_rounds}" if num_rounds > 1 else ""
+
+                for prompt_key, agent_name in [
+                    ("followup_advocate", "Advocate"),
+                    ("followup_skeptic", "Skeptic"),
+                    ("followup_mediator", "Mediator"),
+                ]:
+                    yield f"data: {json.dumps({'event': 'status', 'node': 'followup', 'message': f'{agent_name} {round_label} debating…'})}\n\n"
+
+                    user_prompt = f"{full_context}\n\n# Analysis & Debate History\n{debate_history}"
+                    response = await acall_llm(
+                        system_prompt=BIOTECH_PROMPTS[prompt_key],
+                        user_prompt=user_prompt,
+                    )
+
+                    debate_history += f"\n\n### {agent_name} {round_label}\n{response}"
+                    duration = round(time.time() - node_start, 1)
+                    node_start = time.time()
+
+                    display_name = f"Follow-Up {agent_name}" + (f" ({round_label})" if round_label else "")
+                    yield f"data: {json.dumps({'node': 'followup', 'agent': display_name, 'content': response, 'timestamp': datetime.utcnow().isoformat()})}\n\n"
+                    yield f"data: {json.dumps({'event': 'node_complete', 'node': f'followup_{agent_name.lower()}_{r}', 'duration': duration})}\n\n"
+
+            # ── Step 3: Synthesizer (reasoning model) ──
+            yield f"data: {json.dumps({'event': 'status', 'node': 'followup', 'message': 'Synthesizing final answer…'})}\n\n"
+
+            synth_prompt = f"{full_context}\n\n# Full Analysis & Debate Transcript\n{debate_history}"
+            synthesis = await acall_llm(
+                system_prompt=BIOTECH_PROMPTS["followup_synthesizer"],
+                user_prompt=synth_prompt,
+                model=REASONING_MODEL,
+            )
+
+            duration = round(time.time() - node_start, 1)
+            yield f"data: {json.dumps({'node': 'followup', 'agent': 'Follow-Up Synthesizer', 'content': synthesis, 'timestamp': datetime.utcnow().isoformat()})}\n\n"
+            yield f"data: {json.dumps({'event': 'node_complete', 'node': 'followup_synthesizer', 'duration': duration})}\n\n"
+
+            yield f"data: {json.dumps({'event': 'done'})}\n\n"
+
+        except Exception as e:
+            yield f"data: {json.dumps({'event': 'error', 'detail': str(e)})}\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
 
 
 class AuthRequest(BaseModel):
