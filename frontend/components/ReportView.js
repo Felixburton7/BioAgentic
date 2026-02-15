@@ -234,6 +234,11 @@ export default function ReportView({ brief, target }) {
     const markdownComponents = useMemo(() => ({
         h2: ({ children }) => <HeadingRenderer level={2}>{children}</HeadingRenderer>,
         h3: ({ children }) => <HeadingRenderer level={3}>{children}</HeadingRenderer>,
+        a: ({ href, children }) => (
+            <a href={href} target="_blank" rel="noopener noreferrer" className="report-link">
+                {children}
+            </a>
+        ),
     }), []);
 
     if (!brief) return null;

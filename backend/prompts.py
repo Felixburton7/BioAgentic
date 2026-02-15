@@ -215,7 +215,7 @@ Format your output exactly as below. Use markdown tables where indicated.
 
 | NCT ID | Title | Phase | Status | Enrollment |
 |--------|-------|-------|--------|------------|
-[top 3-5 notable trials]
+[top 3-5 notable trials — NCT IDs MUST be markdown links: [NCT12345678](https://clinicaltrials.gov/study/NCT12345678)]
 
 ## Literature Insights
 [Key findings from papers — 3-5 bullet points. Cite source names inline in **bold** where relevant, e.g. "PARP inhibitors show efficacy (**Journal of Clinical Oncology**)"]
@@ -239,7 +239,16 @@ Format your output exactly as below. Use markdown tables where indicated.
 - [2-3 actionable suggestions as bullets]
 
 ## References
-[Numbered list of all data sources used: journal names, ClinicalTrials.gov, databases, etc.]
+[Numbered list of all data sources used. Each reference MUST be a clickable markdown link:
+- Clinical trials: [NCT12345678](https://clinicaltrials.gov/study/NCT12345678)
+- Journal articles: [Author et al., Journal Name](https://pubmed.ncbi.nlm.nih.gov/?term=SEARCH+TERMS)
+- If a DOI is known: [Title](https://doi.org/DOI_HERE)
+- Databases: [ClinicalTrials.gov](https://clinicaltrials.gov), [PubMed](https://pubmed.ncbi.nlm.nih.gov), [Semantic Scholar](https://www.semanticscholar.org)]
+
+**CRITICAL LINK RULES:**
+- Every NCT ID mentioned anywhere in the report MUST be a markdown link to https://clinicaltrials.gov/study/{NCT_ID}
+- Every journal/paper reference MUST be a markdown link to the PubMed search or DOI
+- Every database name should link to its homepage
 
 Be comprehensive but concise. Bold critical terms and findings. Use actual data from the pipeline — do NOT fabricate numbers. If exact counts are unavailable, use approximate counts from the data provided. This brief should be useful to a biotech decision-maker."""
 

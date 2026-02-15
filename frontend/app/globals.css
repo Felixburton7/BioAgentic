@@ -1981,6 +1981,27 @@ body {
   color: var(--text-secondary);
 }
 
+.report-link,
+.report-body a {
+  color: var(--accent-olive);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--transition-fast), opacity var(--transition-fast);
+}
+
+.report-link:hover,
+.report-body a:hover {
+  border-bottom-color: var(--accent-olive);
+  opacity: 0.85;
+}
+
+.report-link::after,
+.report-body a[target="_blank"]::after {
+  content: " ↗";
+  font-size: 10px;
+  opacity: 0.6;
+}
+
 /* ─── Source Citations Panel (Right) ─── */
 
 .report-sources {
