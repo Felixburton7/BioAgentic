@@ -19,6 +19,27 @@ const SAMPLE_PROMPTS = [
   "Investigate CAR-T cell therapy safety signals and cytokine release syndrome data",
 ];
 
+const DATA_SOURCES = [
+  {
+    id: "ct",
+    name: "ClinicalTrials.gov",
+    icon: "🏥",
+    desc: "The primary database of privately and publicly funded clinical studies conducted around the world. We query this for trial status, interventions, eligibility criteria, and outcomes.",
+  },
+  {
+    id: "pm",
+    name: "PubMed",
+    icon: "📚",
+    desc: "A free search engine accessing primarily the MEDLINE database of references and abstracts on life sciences and biomedical topics. We use it to find relevant peer-reviewed literature.",
+  },
+  {
+    id: "ss",
+    name: "Semantic Scholar",
+    icon: "🔬",
+    desc: "A free, AI-powered research tool for scientific literature. We utilize its citation graph to find influential papers and understand the connectivity between research topics.",
+  },
+];
+
 /* ─── Time-ago helper ─── */
 function timeAgo(ts) {
   const diff = Date.now() - ts;
@@ -114,6 +135,7 @@ export default function Home() {
   const [conversations, setConversations] = useState([]);
   const [activeConversationId, setActiveConversationId] = useState(null);
   const [activeTarget, setActiveTarget] = useState("");
+  const [expandedSource, setExpandedSource] = useState(null);
 
   const eventSourceRef = useRef(null);
 
@@ -450,6 +472,34 @@ export default function Home() {
                   Query clinical trials, literature, and biomedical databases with AI-powered agents — no coding required.
                 </p>
                 <ResearchForm onSubmit={handleSubmit} isStreaming={isStreaming} fillPrompt={pendingPrompt} onPromptFilled={() => setPendingPrompt("")} />
+
+                <div className="features-grid">
+                  <div className="feature-card">
+                    <svg className="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="16 18 22 12 16 6" />
+                      <polyline points="8 6 2 12 8 18" />
+                    </svg>
+                    <h3>Open Source</h3>
+                    <p>Transparent code you can inspect. Verify exactly how your research is processed.</p>
+                  </div>
+                  <div className="feature-card">
+                    <svg className="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    </svg>
+                    <h3>100% Private</h3>
+                    <p>Zero data tracking. Your research queries and results are never stored or shared.</p>
+                  </div>
+                  <div className="feature-card">
+                    <svg className="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                      <circle cx="9" cy="7" r="4" />
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                    <h3>Agentic Debate</h3>
+                    <p>Agents with unique personalities debate and fact-check to ensure high-quality, verified answers.</p>
+                  </div>
+                </div>
               </div>
 
               {/* Sample prompts */}
@@ -490,16 +540,41 @@ export default function Home() {
                   Data sources queried
                 </h3>
                 <div className="db-tools-chips">
-                  <span className="db-tool-chip">
-                    <span className="db-tool-chip-icon">🏥</span> ClinicalTrials.gov
-                  </span>
-                  <span className="db-tool-chip">
-                    <span className="db-tool-chip-icon">📚</span> PubMed
-                  </span>
-                  <span className="db-tool-chip">
-                    <span className="db-tool-chip-icon">🔬</span> Semantic Scholar
-                  </span>
+                  {DATA_SOURCES.map((source) => (
+                    <button
+                      key={source.id}
+                      className={`db-tool-chip ${expandedSource === source.id ? "active" : ""}`}
+                      onClick={() => setExpandedSource(expandedSource === source.id ? null : source.id)}
+                      style={{
+                        cursor: "pointer",
+                        borderColor: expandedSource === source.id ? "var(--border-strong)" : "",
+                        backgroundColor: expandedSource === source.id ? "var(--bg-tertiary)" : "",
+                      }}
+                    >
+                      <span className="db-tool-chip-icon">{source.icon}</span> {source.name}
+                    </button>
+                  ))}
                 </div>
+                {expandedSource && (
+                  <div
+                    style={{
+                      marginTop: "12px",
+                      padding: "16px",
+                      background: "var(--bg-secondary)",
+                      borderRadius: "var(--radius-lg)",
+                      border: "1px solid var(--border)",
+                      fontSize: "14px",
+                      color: "var(--text-secondary)",
+                      animation: "fadeIn 0.3s ease",
+                      lineHeight: "1.6",
+                    }}
+                  >
+                    <strong style={{ color: "var(--text-primary)", display: "block", marginBottom: "4px" }}>
+                      {DATA_SOURCES.find((s) => s.id === expandedSource)?.name}
+                    </strong>
+                    {DATA_SOURCES.find((s) => s.id === expandedSource)?.desc}
+                  </div>
+                )}
               </div>
             </>
           ) : (
