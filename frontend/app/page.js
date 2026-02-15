@@ -469,37 +469,11 @@ export default function Home() {
               <div className="home-form-section">
                 <h1 className="home-greeting">Open Source Agentic Bio Research</h1>
                 <p className="home-subtitle">
-                  Query clinical trials, literature, and biomedical databases with AI-powered agents — no coding required.
+                  Query clinical trials, literature, and biomedical databases with AI-powered agents. Open-source, no queries or searches saved and directly plugged into database API's
                 </p>
                 <ResearchForm onSubmit={handleSubmit} isStreaming={isStreaming} fillPrompt={pendingPrompt} onPromptFilled={() => setPendingPrompt("")} />
 
-                <div className="features-grid">
-                  <div className="feature-card">
-                    <svg className="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="16 18 22 12 16 6" />
-                      <polyline points="8 6 2 12 8 18" />
-                    </svg>
-                    <h3>Open Source</h3>
-                    <p>Transparent code you can inspect. Verify exactly how your research is processed.</p>
-                  </div>
-                  <div className="feature-card">
-                    <svg className="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                    </svg>
-                    <h3>100% Private</h3>
-                    <p>Zero data tracking. Your research queries and results are never stored or shared.</p>
-                  </div>
-                  <div className="feature-card">
-                    <svg className="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                      <circle cx="9" cy="7" r="4" />
-                      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                    </svg>
-                    <h3>Agentic Debate</h3>
-                    <p>Agents with unique personalities debate and fact-check to ensure high-quality, verified answers.</p>
-                  </div>
-                </div>
+
               </div>
 
               {/* Sample prompts */}
@@ -575,6 +549,34 @@ export default function Home() {
                     {DATA_SOURCES.find((s) => s.id === expandedSource)?.desc}
                   </div>
                 )}
+              </div>
+
+              <div className="features-grid">
+                <div className="feature-card">
+                  <svg className="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="16 18 22 12 16 6" />
+                    <polyline points="8 6 2 12 8 18" />
+                  </svg>
+                  <h3>Open Source</h3>
+                  <p>Transparent code you can inspect. Verify exactly how your research is processed.</p>
+                </div>
+                <div className="feature-card">
+                  <svg className="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
+                  <h3>100% Private</h3>
+                  <p>Zero data tracking. Your research queries and results are never stored or shared.</p>
+                </div>
+                <div className="feature-card">
+                  <svg className="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                  <h3>Agentic Debate</h3>
+                  <p>Agents with unique personalities debate and fact-check to ensure high-quality, verified answers.</p>
+                </div>
               </div>
             </>
           ) : (
