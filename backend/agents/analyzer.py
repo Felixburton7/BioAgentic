@@ -11,7 +11,7 @@ import logging
 import re
 from typing import Any, Dict
 
-from ..config import acall_llm
+from ..config import acall_llm, REASONING_MODEL
 from ..prompts import BIOTECH_PROMPTS
 from ..state import BiotechState
 
@@ -56,6 +56,7 @@ class TargetAnalyzer:
             system_prompt=BIOTECH_PROMPTS[self.PROMPT_KEY],
             user_prompt=user_prompt,
             json_mode=True,
+            model=REASONING_MODEL,
         )
 
         search_criteria = self._parse_response(raw_response, target)

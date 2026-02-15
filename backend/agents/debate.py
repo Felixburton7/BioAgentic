@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from ..config import acall_llm, SYNTHESIZER_MODEL
+from ..config import acall_llm, REASONING_MODEL
 from ..prompts import BIOTECH_PROMPTS
 from ..state import BiotechState
 
