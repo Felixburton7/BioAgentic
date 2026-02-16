@@ -138,6 +138,7 @@ export default function Home() {
   const [activeTarget, setActiveTarget] = useState("");
   const [expandedSource, setExpandedSource] = useState(null);
   const [citations, setCitations] = useState([]);
+  const [activeRounds, setActiveRounds] = useState(2);
 
   const eventSourceRef = useRef(null);
 
@@ -173,6 +174,7 @@ export default function Home() {
     setIsClarifying(false);
     setActiveTarget("");
     setCitations([]);
+    setActiveRounds(2);
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
@@ -192,6 +194,7 @@ export default function Home() {
       setActiveConversationId(id);
       setActiveTarget(conv.target || "");
       setCitations(conv.citations || []);
+      setActiveRounds(conv.rounds || 2);
       // Always show the research view when clicking a session
       setResearchActive(true);
     },
@@ -215,9 +218,11 @@ export default function Home() {
         messages: [],
         traces: [],
         brief: "",
+        rounds: rounds,
       };
       setConversations((prev) => [newConv, ...prev]);
       setActiveConversationId(convId);
+      setActiveRounds(rounds);
 
       // SSE streams must bypass the Next.js rewrite proxy (it buffers the
       // entire response).  Use the public API URL if set, otherwise call the
@@ -611,7 +616,7 @@ export default function Home() {
                 </button>
               </div>
 
-              <ResearchForm onSubmit={handleSubmit} isStreaming={isStreaming} fillPrompt={activeTarget} />
+              <ResearchForm onSubmit={handleSubmit} isStreaming={isStreaming} fillPrompt={activeTarget} initialRounds={activeRounds} />
 
               {/* Error display */}
               {error && (

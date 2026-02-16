@@ -241,19 +241,20 @@ Format your output exactly as below. Use markdown tables where indicated.
 - [2-3 actionable suggestions as bullets]
 
 ## References
-[Numbered list of all papers and trials actually referenced in this brief. Each reference MUST be a clickable markdown link using the URL from the **Citation Registry**:
-- Format: [N] Author(s), "Title", Journal (Year). [Link](url)
-- For clinical trials: [N] [NCT ID](url) — Title
+[List of all papers and trials actually referenced in this brief. Each reference MUST use Author-Year format with a clickable markdown link using the URL from the **Citation Registry**:
+- For papers: Author(s), "Title", Journal (Year). [Link](url)
+- For clinical trials: [NCT ID](url) — Title (Sponsor)
 - ONLY include sources that appear in the Citation Registry provided to you]
 
 **CRITICAL RULES:**
-1. **INLINE CITATIONS**: When citing a paper in the body text, use clickable markdown links: [Author et al., Year](url). Get the URL from the Citation Registry.
-2. **NCT IDs**: Every NCT ID mentioned anywhere in the report MUST be a markdown link to https://clinicaltrials.gov/study/{NCT_ID}
-3. **NEVER** cite "Semantic Scholar", "PubMed", "ClinicalTrials.gov", or any database as a reference entry — these are tools, not sources.
-4. **NEVER** cite agent names (Advocate, Skeptic, Mediator, Debate Agent, etc.) as references.
-5. **ONLY** use citations from the Citation Registry — do NOT fabricate URLs or DOIs.
-6. If you cannot find a URL for a source, omit the link but still cite the author/year in parentheses.
-7. **NEVER** include internal citation IDs like [ct-1], [pm-2], [ss-3] in the output. Use simple numbered references [1], [2], etc. for the References list.
+1. **INLINE CITATIONS**: When citing a source in the body text, ALWAYS use author-year format as a clickable markdown link: [Author et al., Year](url). Get the URL from the Citation Registry. For clinical trials, use [NCT ID](url) inline.
+2. **CONSISTENCY**: Use the SAME author-year format for ALL inline citations. Never use numbered references like [1] or [2] — always use [Author et al., Year](url).
+3. **NCT IDs**: Every NCT ID mentioned anywhere in the report MUST be a markdown link to https://clinicaltrials.gov/study/{NCT_ID}
+4. **NEVER** cite "Semantic Scholar", "PubMed", "ClinicalTrials.gov", or any database as a reference entry — these are tools, not sources.
+5. **NEVER** cite agent names (Advocate, Skeptic, Mediator, Debate Agent, etc.) as references.
+6. **ONLY** use citations from the Citation Registry — do NOT fabricate URLs or DOIs.
+7. If you cannot find a URL for a source, omit the link but still cite the author/year in parentheses (Author et al., Year).
+8. **NEVER** include internal citation IDs like [ct-1], [pm-2], [ss-3] in the output.
 
 Be comprehensive but concise. Bold critical terms and findings. Use actual data from the pipeline — do NOT fabricate numbers. If exact counts are unavailable, use approximate counts from the data provided. This brief should be useful to a biotech decision-maker."""
 

@@ -25,9 +25,9 @@ const RESOURCES = [
 const ALLOWED_EXTENSIONS = [".txt", ".csv", ".tsv", ".json", ".fasta", ".fa", ".pdb", ".pdf", ".md"];
 const ALLOWED_MIME_HINT = ".txt,.csv,.tsv,.json,.fasta,.fa,.pdb,.pdf,.md";
 
-export default function ResearchForm({ onSubmit, isStreaming, fillPrompt, onPromptFilled }) {
+export default function ResearchForm({ onSubmit, isStreaming, fillPrompt, onPromptFilled, initialRounds }) {
     const [target, setTarget] = useState("");
-    const [rounds, setRounds] = useState(2);
+    const [rounds, setRounds] = useState(initialRounds || 2);
     const [showMentionPopup, setShowMentionPopup] = useState(false);
     const [mentionSearch, setMentionSearch] = useState("");
     const [selectedResources, setSelectedResources] = useState([]);
@@ -46,6 +46,13 @@ export default function ResearchForm({ onSubmit, isStreaming, fillPrompt, onProm
             if (onPromptFilled) onPromptFilled();
         }
     }, [fillPrompt, onPromptFilled]);
+
+    // Sync rounds when initialRounds prop changes
+    useEffect(() => {
+        if (initialRounds != null) {
+            setRounds(initialRounds);
+        }
+    }, [initialRounds]);
 
     // Auto-resize textarea when target changes
     useEffect(() => {
