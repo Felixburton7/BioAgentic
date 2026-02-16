@@ -2959,6 +2959,37 @@ body {
   line-height: 1.4;
 }
 
+.clarification-hint {
+  font-size: 13px;
+  color: var(--text-faint);
+  margin: 0;
+}
+
+/* Checkbox Square (multi-select) */
+.checkbox-square {
+  width: 20px;
+  height: 20px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  background: white;
+}
+
+.clarification-radio-item:hover .checkbox-square {
+  border-color: var(--text-primary);
+}
+
+.clarification-radio-item.selected .checkbox-square {
+  border-color: var(--text-primary);
+  background: var(--text-primary);
+  color: white;
+}
+
 /* Text Input */
 .clarification-text-input {
   width: 100%;

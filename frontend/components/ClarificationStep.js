@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 
 export default function ClarificationStep({
     focusQuestion,
@@ -10,31 +10,33 @@ export default function ClarificationStep({
     onConfirm,
     onBack,
 }) {
-    const [selectedFocusId, setSelectedFocusId] = useState("");
+    const [selectedFocusIds, setSelectedFocusIds] = useState([]);
     const [customFocus, setCustomFocus] = useState("");
     const [targetAnswer, setTargetAnswer] = useState("");
 
-    const canSubmit = selectedFocusId && (selectedFocusId !== "other" || customFocus.trim());
+    const hasOther = selectedFocusIds.includes("other");
+    const canSubmit = selectedFocusIds.length > 0 && (!hasOther || customFocus.trim());
+
+    const toggleFocus = useCallback((id) => {
+        setSelectedFocusIds((prev) =>
+            prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+        );
+    }, []);
 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!canSubmit) return;
 
-        // Combine into a single clarification string for the agent
-        let focusLabel, focusDesc;
+        // Build focus descriptions from all selected options
+        const focusParts = selectedFocusIds.map((id) => {
+            if (id === "other") {
+                return `Custom Focus: ${customFocus.trim()}`;
+            }
+            const opt = focusOptions.find((o) => o.id === id);
+            return opt ? `${opt.label} (${opt.description})` : id;
+        });
 
-        if (selectedFocusId === "other") {
-            focusLabel = "Custom Focus";
-            focusDesc = customFocus.trim();
-        } else {
-            const selectedOption = focusOptions.find(o => o.id === selectedFocusId);
-            // Guard against potential data sync issues
-            if (!selectedOption) return;
-            focusLabel = selectedOption.label;
-            focusDesc = selectedOption.description;
-        }
-
-        const clarification = `Research Focus: ${focusLabel} (${focusDesc})\nSpecific Target Details: ${targetAnswer || "None provided"}`;
+        const clarification = `Research Focus: ${focusParts.join("; ")}\nSpecific Target Details: ${targetAnswer || "None provided"}`;
 
         onConfirm(clarification);
     };
@@ -51,42 +53,52 @@ export default function ClarificationStep({
                 <div className="clarification-section">
                     <h3 className="clarification-section-title">1. Research Focus</h3>
                     <p className="clarification-question-text">{focusQuestion}</p>
+                    <p className="clarification-hint">Select one or more areas of focus</p>
 
                     <div className="clarification-options-list">
-                        {focusOptions.map((option) => (
-                            <label
-                                key={option.id}
-                                className={`clarification-radio-item ${selectedFocusId === option.id ? "selected" : ""}`}
-                            >
-                                <div className="radio-circle">
-                                    {selectedFocusId === option.id && <div className="radio-dot" />}
-                                </div>
-                                <input
-                                    type="radio"
-                                    name="focus"
-                                    value={option.id}
-                                    checked={selectedFocusId === option.id}
-                                    onChange={(e) => setSelectedFocusId(e.target.value)}
-                                    className="hidden-radio"
-                                />
-                                <div className="radio-content">
-                                    <span className="radio-label">{option.label}</span>
-                                    <span className="radio-desc">{option.description}</span>
-                                </div>
-                            </label>
-                        ))}
+                        {focusOptions.map((option) => {
+                            const isSelected = selectedFocusIds.includes(option.id);
+                            return (
+                                <label
+                                    key={option.id}
+                                    className={`clarification-radio-item ${isSelected ? "selected" : ""}`}
+                                >
+                                    <div className="checkbox-square">
+                                        {isSelected && (
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                                <polyline points="20 6 9 17 4 12" />
+                                            </svg>
+                                        )}
+                                    </div>
+                                    <input
+                                        type="checkbox"
+                                        value={option.id}
+                                        checked={isSelected}
+                                        onChange={() => toggleFocus(option.id)}
+                                        className="hidden-radio"
+                                    />
+                                    <div className="radio-content">
+                                        <span className="radio-label">{option.label}</span>
+                                        <span className="radio-desc">{option.description}</span>
+                                    </div>
+                                </label>
+                            );
+                        })}
 
                         {/* "Other" option with custom text input */}
-                        <label className={`clarification-radio-item ${selectedFocusId === "other" ? "selected" : ""}`}>
-                            <div className="radio-circle">
-                                {selectedFocusId === "other" && <div className="radio-dot" />}
+                        <label className={`clarification-radio-item ${hasOther ? "selected" : ""}`}>
+                            <div className="checkbox-square">
+                                {hasOther && (
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="20 6 9 17 4 12" />
+                                    </svg>
+                                )}
                             </div>
                             <input
-                                type="radio"
-                                name="focus"
+                                type="checkbox"
                                 value="other"
-                                checked={selectedFocusId === "other"}
-                                onChange={(e) => setSelectedFocusId(e.target.value)}
+                                checked={hasOther}
+                                onChange={() => toggleFocus("other")}
                                 className="hidden-radio"
                             />
                             <div className="radio-content">
@@ -96,7 +108,7 @@ export default function ClarificationStep({
                         </label>
 
                         {/* Custom focus text input — visible when "Other" is selected */}
-                        {selectedFocusId === "other" && (
+                        {hasOther && (
                             <div className="clarification-custom-input-wrapper">
                                 <textarea
                                     className="clarification-text-input clarification-custom-textarea"
@@ -165,3 +177,4 @@ export default function ClarificationStep({
         </div>
     );
 }
+
