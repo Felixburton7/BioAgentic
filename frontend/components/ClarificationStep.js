@@ -11,18 +11,21 @@ export default function ClarificationStep({
     onBack,
 }) {
     const [selectedFocusId, setSelectedFocusId] = useState("");
+    const [customFocus, setCustomFocus] = useState("");
     const [targetAnswer, setTargetAnswer] = useState("");
+
+    const canSubmit = selectedFocusId && (selectedFocusId !== "other" || customFocus.trim());
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!selectedFocusId) return;
+        if (!canSubmit) return;
 
         // Combine into a single clarification string for the agent
         let focusLabel, focusDesc;
 
         if (selectedFocusId === "other") {
-            focusLabel = "Other";
-            focusDesc = "Custom user focus";
+            focusLabel = "Custom Focus";
+            focusDesc = customFocus.trim();
         } else {
             const selectedOption = focusOptions.find(o => o.id === selectedFocusId);
             // Guard against potential data sync issues
@@ -73,7 +76,7 @@ export default function ClarificationStep({
                             </label>
                         ))}
 
-                        {/* "Other" Option Hardcoded as fallback if needed, or part of options list from backend */}
+                        {/* "Other" option with custom text input */}
                         <label className={`clarification-radio-item ${selectedFocusId === "other" ? "selected" : ""}`}>
                             <div className="radio-circle">
                                 {selectedFocusId === "other" && <div className="radio-dot" />}
@@ -88,8 +91,23 @@ export default function ClarificationStep({
                             />
                             <div className="radio-content">
                                 <span className="radio-label">Other</span>
+                                <span className="radio-desc">Describe your own research focus</span>
                             </div>
                         </label>
+
+                        {/* Custom focus text input — visible when "Other" is selected */}
+                        {selectedFocusId === "other" && (
+                            <div className="clarification-custom-input-wrapper">
+                                <textarea
+                                    className="clarification-text-input clarification-custom-textarea"
+                                    placeholder="Describe your specific research focus…"
+                                    value={customFocus}
+                                    onChange={(e) => setCustomFocus(e.target.value)}
+                                    rows={2}
+                                    autoFocus
+                                />
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -133,7 +151,7 @@ export default function ClarificationStep({
                     <button
                         type="submit"
                         className="btn-bio-submit"
-                        disabled={!selectedFocusId}
+                        disabled={!canSubmit}
                     >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <line x1="22" y1="2" x2="11" y2="13"></line>

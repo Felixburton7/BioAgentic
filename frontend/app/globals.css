@@ -2978,6 +2978,18 @@ body {
   box-shadow: 0 0 0 2px rgba(26, 26, 26, 0.05);
 }
 
+/* Custom focus input (appears when "Other" is selected) */
+.clarification-custom-input-wrapper {
+  margin-left: 32px;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.clarification-custom-textarea {
+  resize: vertical;
+  min-height: 52px;
+  max-height: 160px;
+}
+
 /* Submit Button */
 .clarification-submit-wrapper {
   margin-top: var(--space-lg);
