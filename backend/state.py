@@ -42,6 +42,21 @@ class AgentLog(TypedDict):
     content: str      # Agent's output text
 
 
+class Citation(TypedDict, total=False):
+    """Structured citation metadata tracked across all agents."""
+    id: str           # e.g. "ct-1", "pm-3", "ss-5"
+    type: str         # "clinical_trial" | "pubmed" | "semantic_scholar"
+    title: str
+    authors: str      # "Smith J, Doe A et al."
+    year: str
+    journal: str
+    url: str          # direct link to the paper/trial
+    pmid: str         # PubMed ID (if applicable)
+    doi: str          # DOI (if applicable)
+    nct_id: str       # NCT ID (if applicable)
+    source_agent: str # which agent discovered this citation
+
+
 class BiotechState(TypedDict, total=False):
     """
     Main graph state — passed between all LangGraph nodes.
@@ -63,3 +78,4 @@ class BiotechState(TypedDict, total=False):
     # Output
     brief: str                  # Final synthesized markdown brief
     agents_log: List[AgentLog]  # Full conversation log of all agents
+    citations: List[Citation]   # Structured citation registry

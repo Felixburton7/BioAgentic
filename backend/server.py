@@ -75,6 +75,21 @@ class AgentMessage(BaseModel):
     timestamp: str
 
 
+class CitationModel(BaseModel):
+    """Structured citation from the research pipeline."""
+    id: str
+    type: str
+    title: str
+    authors: str = ""
+    year: str = ""
+    journal: str = ""
+    url: str = ""
+    pmid: str = ""
+    doi: str = ""
+    nct_id: str = ""
+    source_agent: str = ""
+
+
 class ResearchResponse(BaseModel):
     """Full pipeline response."""
     target: str
@@ -82,6 +97,7 @@ class ResearchResponse(BaseModel):
     debate_history: str
     brief: str
     agents_log: List[AgentMessage]
+    citations: List[CitationModel] = []
 
 
 # ---------------------------------------------------------------------------
@@ -134,6 +150,7 @@ def _build_initial_state(target: str, rounds: int, clarification: str = "") -> d
         },
         "brief": "",
         "agents_log": [],
+        "citations": [],
     }
 
 
@@ -175,12 +192,16 @@ async def run_research(req: ResearchRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Pipeline error: {e}")
 
+    raw_citations = result.get("citations", [])
+    citations = [CitationModel(**c) for c in raw_citations]
+
     return ResearchResponse(
         target=req.target,
         hypotheses=result.get("hypotheses", ""),
         debate_history=result.get("debate", {}).get("history", ""),
         brief=result.get("brief", ""),
         agents_log=_format_log(result.get("agents_log", [])),
+        citations=citations,
     )
 
 
@@ -235,6 +256,7 @@ async def stream_research(req: ResearchRequest):
         yield f"data: {json.dumps({'event': 'status', 'node': first_node, 'message': PIPELINE_STATUS.get(first_node, 'Processing…')})}\n\n"
 
         node_start = time.time()
+        all_citations: list[dict] = []
 
         try:
             async for chunk in graph.astream(
@@ -246,6 +268,11 @@ async def stream_research(req: ResearchRequest):
                 # Each chunk is {node_name: state_update}
                 for node_name, update in chunk.items():
                     duration = round(now - node_start, 1)
+
+                    # Collect citations from this chunk
+                    chunk_citations = update.get("citations", [])
+                    if chunk_citations:
+                        all_citations = chunk_citations  # state accumulates, so latest is complete
 
                     # Emit node_complete with duration
                     yield f"data: {json.dumps({'event': 'node_complete', 'node': node_name, 'duration': duration})}\n\n"
@@ -271,6 +298,10 @@ async def stream_research(req: ResearchRequest):
                         pass
 
                     node_start = now
+
+            # Emit structured citations before done
+            if all_citations:
+                yield f"data: {json.dumps({'event': 'citations', 'citations': all_citations})}\n\n"
 
             yield f"data: {json.dumps({'event': 'done'})}\n\n"
 

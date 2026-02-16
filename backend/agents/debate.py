@@ -13,6 +13,33 @@ from ..prompts import BIOTECH_PROMPTS
 from ..state import BiotechState
 
 
+def _format_citation_registry(citations: list[dict]) -> str:
+    """Build a citation registry block for the synthesizer prompt."""
+    if not citations:
+        return "\n\n## Citation Registry\nNo structured citations available."
+    lines = ["\n\n## Citation Registry"]
+    lines.append("Use ONLY these citations for the References section. Each citation has a verified URL.")
+    lines.append("Do NOT include internal IDs (like ct-1, pm-2, ss-3) in the final report — use numbered references [1], [2], etc.")
+    lines.append("")
+    for idx, c in enumerate(citations, 1):
+        parts = []
+        if c.get("authors"):
+            parts.append(c["authors"])
+        if c.get("title"):
+            parts.append(f'"{c["title"]}"')
+        if c.get("journal"):
+            parts.append(c["journal"])
+        if c.get("year"):
+            parts.append(f"({c['year']})")
+        if c.get("nct_id"):
+            parts.append(f"NCT: {c['nct_id']}")
+        url = c.get("url", "")
+        lines.append(f"- {idx}. {' — '.join(parts)}")
+        if url:
+            lines.append(f"  URL: {url}")
+    return "\n".join(lines)
+
+
 class Debate:
     """Run N rounds of advocate → skeptic → mediator debate."""
 
@@ -100,8 +127,9 @@ class Synthesizer:
 
     async def call(self, state: BiotechState) -> Dict[str, Any]:
         """
-        Combine target analysis, API data, hypotheses, and the full
-        debate transcript into a structured markdown report.
+        Combine target analysis, API data, hypotheses, the full
+        debate transcript, and the structured citation registry
+        into a structured markdown report.
         """
         target: str = state["target"]
         analysis: str = state.get("analysis", "")  # type: ignore[arg-type]
@@ -109,6 +137,9 @@ class Synthesizer:
         hypotheses: str = state.get("hypotheses", "")  # type: ignore[arg-type]
         debate: dict = state.get("debate", {})  # type: ignore[arg-type]
         debate_history: str = debate.get("history", "")
+        citations: list = state.get("citations", [])  # type: ignore[arg-type]
+
+        citation_registry = _format_citation_registry(citations)
 
         full_context = (
             f"# Research Target: {target}\n\n"
@@ -118,6 +149,7 @@ class Synthesizer:
             f"## Semantic Scholar Literature\n{api_data.get('semantic', 'N/A')[:800]}\n\n"
             f"## Generated Hypotheses\n{hypotheses}\n\n"
             f"## Debate Transcript\n{debate_history}"
+            f"{citation_registry}"
         )
 
         brief = await acall_llm(

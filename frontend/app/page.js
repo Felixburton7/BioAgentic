@@ -137,6 +137,7 @@ export default function Home() {
   const [activeConversationId, setActiveConversationId] = useState(null);
   const [activeTarget, setActiveTarget] = useState("");
   const [expandedSource, setExpandedSource] = useState(null);
+  const [citations, setCitations] = useState([]);
 
   const eventSourceRef = useRef(null);
 
@@ -171,6 +172,7 @@ export default function Home() {
     setClarificationData(null);
     setIsClarifying(false);
     setActiveTarget("");
+    setCitations([]);
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
@@ -189,6 +191,7 @@ export default function Home() {
       setIsStreaming(false);
       setActiveConversationId(id);
       setActiveTarget(conv.target || "");
+      setCitations(conv.citations || []);
       // Always show the research view when clicking a session
       setResearchActive(true);
     },
@@ -289,6 +292,15 @@ export default function Home() {
                       setConversations((prev) =>
                         prev.map((c) =>
                           c.id === convId ? { ...c, status: "done" } : c
+                        )
+                      );
+                    } else if (payload.event === "citations") {
+                      // Backend: {event:"citations", citations: [...]}
+                      const citationList = payload.citations || [];
+                      setCitations(citationList);
+                      setConversations((prev) =>
+                        prev.map((c) =>
+                          c.id === convId ? { ...c, citations: citationList } : c
                         )
                       );
                     } else if (payload.event === "error") {
@@ -619,7 +631,7 @@ export default function Home() {
               )}
 
               <AgentStream messages={messages} isDone={!isStreaming && messages.length > 0} error={""} />
-              {brief && <ReportView brief={brief} />}
+              {brief && <ReportView brief={brief} target={activeTarget} citations={citations} />}
               {brief && !isStreaming && (
                 <FollowUpBar brief={brief} target={activeTarget} />
               )}

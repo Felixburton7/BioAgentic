@@ -11,7 +11,7 @@ from ..config import MAX_API_TIMEOUT, NCBI_API_KEY
 EUTILS_BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
 
 
-def fetch_papers(target: str, max_results: int = 8) -> str:
+def fetch_papers(target: str, max_results: int = 8) -> tuple[str, list[dict]]:
     """
     Search PubMed for recent papers matching a biotech target.
 
@@ -23,7 +23,7 @@ def fetch_papers(target: str, max_results: int = 8) -> str:
         max_results: Number of papers to retrieve.
 
     Returns:
-        Formatted markdown string with paper summaries.
+        Tuple of (formatted markdown string, list of citation dicts).
     """
     try:
         # --- Step 1: Search for PMIDs ---
@@ -49,7 +49,7 @@ def fetch_papers(target: str, max_results: int = 8) -> str:
         total_count = search_data.get("esearchresult", {}).get("count", "0")
 
         if not id_list:
-            return f"**No PubMed papers found for '{target}'.** Try different keywords."
+            return f"**No PubMed papers found for '{target}'.** Try different keywords.", []
 
         # --- Step 2: Fetch abstracts ---
         fetch_params = {
@@ -72,24 +72,25 @@ def fetch_papers(target: str, max_results: int = 8) -> str:
         return _parse_pubmed_xml(fetch_resp.text, total_count, target)
 
     except requests.Timeout:
-        return f"**PubMed timeout** for '{target}'. Try again or use a NCBI API key for higher limits."
+        return f"**PubMed timeout** for '{target}'. Try again or use a NCBI API key for higher limits.", []
     except requests.RequestException as e:
-        return f"**PubMed API error**: {e}"
+        return f"**PubMed API error**: {e}", []
     except ET.ParseError as e:
-        return f"**Error parsing PubMed XML**: {e}"
+        return f"**Error parsing PubMed XML**: {e}", []
 
 
-def _parse_pubmed_xml(xml_text: str, total_count: str, target: str) -> str:
-    """Parse PubMed efetch XML into formatted markdown."""
+def _parse_pubmed_xml(xml_text: str, total_count: str, target: str) -> tuple[str, list[dict]]:
+    """Parse PubMed efetch XML into formatted markdown and structured citations."""
     root = ET.fromstring(xml_text)
     articles = root.findall(".//PubmedArticle")
 
     if not articles:
-        return f"**No abstracts available** for '{target}' papers."
+        return f"**No abstracts available** for '{target}' papers.", []
 
     summary = f"**{total_count} PubMed results for '{target}'** (showing {len(articles)}):\n\n"
+    citations: list[dict] = []
 
-    for article in articles:
+    for idx, article in enumerate(articles):
         medline = article.find(".//MedlineCitation")
         if medline is None:
             continue
@@ -114,7 +115,8 @@ def _parse_pubmed_xml(xml_text: str, total_count: str, target: str) -> str:
                     name += f" {init.text}"
                 authors.append(name)
         author_str = ", ".join(authors)
-        if len(medline.findall(".//Author")) > 3:
+        total_authors = len(medline.findall(".//Author"))
+        if total_authors > 3:
             author_str += " et al."
 
         # Year
@@ -126,6 +128,14 @@ def _parse_pubmed_xml(xml_text: str, total_count: str, target: str) -> str:
         journal = journal_elem.text if journal_elem is not None else ""
         journal = (journal[:60] + "...") if journal and len(journal) > 60 else (journal or "")
 
+        # DOI
+        doi = ""
+        article_id_list = article.findall(".//ArticleIdList/ArticleId")
+        for aid in article_id_list:
+            if aid.get("IdType") == "doi" and aid.text:
+                doi = aid.text
+                break
+
         # Abstract
         abstract_parts = medline.findall(".//AbstractText")
         if abstract_parts:
@@ -136,6 +146,7 @@ def _parse_pubmed_xml(xml_text: str, total_count: str, target: str) -> str:
         else:
             abstract = "No abstract available."
 
+        url = f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/"
         summary += (
             f"- **{title}** (PMID: {pmid}, {year})\n"
             f"  Authors: {author_str}\n"
@@ -143,4 +154,19 @@ def _parse_pubmed_xml(xml_text: str, total_count: str, target: str) -> str:
             f"  Abstract: {abstract}\n\n"
         )
 
-    return summary
+        # Build structured citation
+        citations.append({
+            "id": f"pm-{idx + 1}",
+            "type": "pubmed",
+            "title": title,
+            "authors": author_str,
+            "year": year,
+            "journal": journal,
+            "url": f"https://doi.org/{doi}" if doi else url,
+            "pmid": pmid,
+            "doi": doi,
+            "nct_id": "",
+            "source_agent": "Literature Miner",
+        })
+
+    return summary, citations

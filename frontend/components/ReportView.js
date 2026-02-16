@@ -25,21 +25,70 @@ function parseHeadings(markdown) {
     return headings;
 }
 
-/* ─── Extract source citations from the brief ─── */
-function extractSources(markdown) {
+/* ─── Build sources from structured citations (preferred) or fallback to extraction ─── */
+function buildSourcesFromCitations(citationsList) {
+    if (!citationsList || citationsList.length === 0) return [];
+
+    return citationsList
+        .filter((c) => c.title && c.title !== "Untitled") // skip empty entries
+        .map((c) => {
+            let typeLabel;
+            let icon;
+            switch (c.type) {
+                case "clinical_trial":
+                    typeLabel = "Clinical Trial";
+                    icon = "🏥";
+                    break;
+                case "pubmed":
+                    typeLabel = "PubMed";
+                    icon = "📚";
+                    break;
+                case "semantic_scholar":
+                    typeLabel = "Semantic Scholar";
+                    icon = "🔬";
+                    break;
+                default:
+                    typeLabel = "Source";
+                    icon = "📄";
+            }
+
+            // Build a display label: "Author (Year)" or just title
+            let label = c.title;
+            if (label.length > 70) label = label.slice(0, 67) + "…";
+
+            // Build context string
+            let context = "";
+            if (c.authors) context += c.authors;
+            if (c.journal) context += context ? ` — ${c.journal}` : c.journal;
+            if (c.year) context += context ? ` (${c.year})` : c.year;
+            if (c.nct_id) context += context ? ` — ${c.nct_id}` : c.nct_id;
+
+            return {
+                type: c.type,
+                typeLabel,
+                icon,
+                label,
+                context: context || label,
+                url: c.url || "",
+                id: c.id,
+                authors: c.authors || "",
+                year: c.year || "",
+                doi: c.doi || "",
+                pmid: c.pmid || "",
+                nct_id: c.nct_id || "",
+            };
+        });
+}
+
+/* ─── Fallback: extract sources from markdown (for backwards compatibility) ─── */
+function extractSourcesFallback(markdown) {
     if (!markdown) return [];
     const sources = [];
     const seen = new Set();
-
-    // Pattern 1: Bold text that looks like journal/source names
-    const boldPattern = /\*\*([^*]+)\*\*/g;
-    let match;
     const lines = markdown.split("\n");
 
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
-
-        // Skip heading lines and table headers
         if (line.startsWith("#") || line.startsWith("|--")) continue;
 
         // Look for NCT IDs
@@ -49,77 +98,49 @@ function extractSources(markdown) {
             const nctId = nctMatch[0];
             if (!seen.has(nctId)) {
                 seen.add(nctId);
-                // Get some context around the NCT ID
-                const contextStart = Math.max(0, nctMatch.index - 40);
-                const contextEnd = Math.min(line.length, nctMatch.index + nctId.length + 60);
-                let context = line.substring(contextStart, contextEnd).replace(/\*\*/g, "").replace(/\|/g, "").trim();
-                if (contextStart > 0) context = "…" + context;
-                if (contextEnd < line.length) context = context + "…";
                 sources.push({
                     type: "clinical_trial",
+                    typeLabel: "Clinical Trial",
+                    icon: "🏥",
                     label: nctId,
-                    context: context,
-                    line: i + 1,
-                    section: findSection(lines, i),
-                    url: `https://clinicaltrials.gov/study/${nctId}`
+                    context: nctId,
+                    url: `https://clinicaltrials.gov/study/${nctId}`,
+                    id: `ct-fallback-${sources.length}`,
                 });
             }
         }
 
-        // Look for bold references that seem like sources (journals, papers, databases)
-        while ((match = boldPattern.exec(line)) !== null) {
-            const text = match[1].trim();
-            // Filter: only items that look like source references
-            const isSource =
-                /journal|lancet|nature|science|cell|oncology|nejm|bmc|plos|cancer|research|review|annals|clinical|medicine|therapeutics|pharmacology|biochem/i.test(text) ||
-                /pubmed|clinicaltrials|semantic scholar/i.test(text) ||
-                (text.length > 10 && text.length < 80 && /[A-Z]/.test(text[0]) && !/^(Strong|Moderate|Weak|Phase|Total|Active|Recruiting|Completed|High|Low|Yes|No|Hypothesis|Key|NCT)/i.test(text));
+        // Look for markdown links to papers [text](url)
+        const linkPattern = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+        let linkMatch;
+        while ((linkMatch = linkPattern.exec(line)) !== null) {
+            const text = linkMatch[1].trim();
+            const url = linkMatch[2];
+            // Skip database homepage links and NCT links (already captured)
+            if (/^(clinicaltrials\.gov|pubmed|semantic\s*scholar)$/i.test(text)) continue;
+            if (url.includes("clinicaltrials.gov/study/NCT") && seen.has(text)) continue;
 
-            if (isSource && !seen.has(text) && text.length > 3) {
-                seen.add(text);
-                // Get surrounding context
-                const idx = match.index;
-                const contextStart = Math.max(0, idx - 30);
-                const contextEnd = Math.min(line.length, idx + text.length + 60);
-                let context = line.substring(contextStart, contextEnd).replace(/\*\*/g, "").replace(/\|/g, "").trim();
-                if (contextStart > 0) context = "…" + context;
-                if (contextEnd < line.length) context = context + "…";
+            const key = url;
+            if (!seen.has(key) && text.length > 3) {
+                seen.add(key);
+                let type = "literature";
+                let icon = "📚";
+                if (url.includes("clinicaltrials.gov")) { type = "clinical_trial"; icon = "🏥"; }
+                else if (url.includes("arxiv.org")) { type = "semantic_scholar"; icon = "🔬"; }
+                else if (url.includes("semanticscholar.org")) { type = "semantic_scholar"; icon = "🔬"; }
+
                 sources.push({
-                    type: "literature",
-                    label: text,
-                    context: context,
-                    line: i + 1,
-                    section: findSection(lines, i),
-                    url: `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(text)}`
+                    type,
+                    typeLabel: type === "clinical_trial" ? "Clinical Trial" : type === "semantic_scholar" ? "Semantic Scholar" : "Literature",
+                    icon,
+                    label: text.length > 70 ? text.slice(0, 67) + "…" : text,
+                    context: text,
+                    url,
+                    id: `fb-${sources.length}`,
                 });
             }
         }
     }
-
-    // Also parse the References section explicitly
-    let inReferences = false;
-    for (let i = 0; i < lines.length; i++) {
-        if (/^## References/i.test(lines[i])) {
-            inReferences = true;
-            continue;
-        }
-        if (inReferences && /^## /.test(lines[i])) break;
-        if (inReferences && lines[i].trim()) {
-            const refText = lines[i].replace(/^\d+\.\s*/, "").replace(/^[-*]\s*/, "").replace(/\*\*/g, "").trim();
-            if (refText && !seen.has(refText) && refText.length > 3) {
-                seen.add(refText);
-                sources.push({
-                    type: "reference",
-                    label: refText.length > 60 ? refText.slice(0, 57) + "…" : refText,
-                    context: refText,
-                    line: i + 1,
-                    section: "References",
-                    url: `https://scholar.google.com/scholar?q=${encodeURIComponent(refText.slice(0, 100))}`
-                });
-            }
-        }
-    }
-
     return sources;
 }
 
@@ -142,7 +163,7 @@ function HeadingRenderer({ level, children }) {
 /* ================================================================
    ReportView Component
    ================================================================ */
-export default function ReportView({ brief, target }) {
+export default function ReportView({ brief, target, citations = [] }) {
     // Hooks must be called unconditionally
     const reportBodyRef = useRef(null);
     const [activeSection, setActiveSection] = useState("");
@@ -150,19 +171,24 @@ export default function ReportView({ brief, target }) {
     const [showSourcePanel, setShowSourcePanel] = useState(true);
 
     const headings = useMemo(() => parseHeadings(brief), [brief]);
-    const sources = useMemo(() => extractSources(brief), [brief]);
 
-    // Group sources by section
-    const sourcesBySection = useMemo(() => {
+    // Use structured citations from backend if available, otherwise extract from markdown
+    const sources = useMemo(() => {
+        const structured = buildSourcesFromCitations(citations);
+        if (structured.length > 0) return structured;
+        return extractSourcesFallback(brief);
+    }, [citations, brief]);
+
+    // Group sources by type
+    const sourcesByType = useMemo(() => {
         const grouped = {};
         for (const src of sources) {
-            if (!grouped[src.section]) grouped[src.section] = [];
-            grouped[src.section].push(src);
+            const key = src.typeLabel || src.type;
+            if (!grouped[key]) grouped[key] = [];
+            grouped[key].push(src);
         }
         return grouped;
     }, [sources]);
-
-    // ... rest of hooks ...
 
     /* ─── Track active section on scroll ─── */
     useEffect(() => {
@@ -181,7 +207,6 @@ export default function ReportView({ brief, target }) {
             setActiveSection(current);
         };
 
-        // Use window scroll since reporting is in the page flow
         window.addEventListener("scroll", handleScroll, { passive: true });
         handleScroll();
         return () => window.removeEventListener("scroll", handleScroll);
@@ -219,16 +244,6 @@ export default function ReportView({ brief, target }) {
 
         html2pdf().set(opt).from(el).save();
     }, [target]);
-
-    /* ─── Source type icon/color ─── */
-    const sourceIcon = (type) => {
-        switch (type) {
-            case "clinical_trial": return "🏥";
-            case "literature": return "📚";
-            case "reference": return "📎";
-            default: return "📄";
-        }
-    };
 
     /* ─── Custom components for ReactMarkdown ─── */
     const markdownComponents = useMemo(() => ({
@@ -319,10 +334,10 @@ export default function ReportView({ brief, target }) {
 
                 {showSourcePanel && (
                     <div className="report-sources-list">
-                        {Object.entries(sourcesBySection).map(([section, sectionSources]) => (
-                            <div key={section} className="source-section-group">
-                                <div className="source-section-label">{section}</div>
-                                {sectionSources.map((src, idx) => {
+                        {Object.entries(sourcesByType).map(([typeLabel, typeSources]) => (
+                            <div key={typeLabel} className="source-section-group">
+                                <div className="source-section-label">{typeLabel}</div>
+                                {typeSources.map((src, idx) => {
                                     const globalIdx = sources.indexOf(src);
                                     return (
                                         <div key={globalIdx} className="source-item">
@@ -330,7 +345,7 @@ export default function ReportView({ brief, target }) {
                                                 className="source-item-header"
                                                 onClick={() => toggleSource(globalIdx)}
                                             >
-                                                <span className="source-icon">{sourceIcon(src.type)}</span>
+                                                <span className="source-icon">{src.icon}</span>
                                                 <span className="source-label">{src.label}</span>
                                                 <svg className={`source-chevron ${expandedSources[globalIdx] ? "open" : ""}`} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                     <polyline points="6 9 12 15 18 9" />
@@ -339,25 +354,31 @@ export default function ReportView({ brief, target }) {
                                             {expandedSources[globalIdx] && (
                                                 <div className="source-item-detail">
                                                     <div className="source-context">
-                                                        <span className="source-context-label">Context:</span>
                                                         <span className="source-context-text">{src.context}</span>
                                                     </div>
-                                                    <div className="source-meta">
-                                                        <span className="source-meta-item">
-                                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M2 12h20" /></svg>
-                                                            Line {src.line}
-                                                        </span>
-                                                        <span className="source-meta-item">
-                                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>
-                                                            {src.section}
-                                                        </span>
-                                                    </div>
+                                                    {(src.doi || src.pmid || src.nct_id) && (
+                                                        <div className="source-meta">
+                                                            {src.pmid && (
+                                                                <span className="source-meta-item">
+                                                                    PMID: {src.pmid}
+                                                                </span>
+                                                            )}
+                                                            {src.doi && (
+                                                                <span className="source-meta-item">
+                                                                    DOI: {src.doi}
+                                                                </span>
+                                                            )}
+                                                            {src.nct_id && (
+                                                                <span className="source-meta-item">
+                                                                    {src.nct_id}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    )}
                                                     {src.url && (
                                                         <a className="source-link" href={src.url} target="_blank" rel="noopener noreferrer">
                                                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg>
-                                                            {src.type === "clinical_trial" ? "View on ClinicalTrials.gov" :
-                                                                src.type === "literature" ? "Search on PubMed" :
-                                                                    "Search on Google Scholar"}
+                                                            View Paper
                                                         </a>
                                                     )}
                                                 </div>

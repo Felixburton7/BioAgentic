@@ -12,7 +12,7 @@ def fetch_trials(
     target: str,
     max_results: int = 10,
     intervention: str | None = None,
-) -> str:
+) -> tuple[str, list[dict]]:
     """
     Search ClinicalTrials.gov for studies matching a target/condition.
 
@@ -25,7 +25,7 @@ def fetch_trials(
         intervention: Optional intervention/drug search term for the intervention field.
 
     Returns:
-        Formatted markdown string with trial summaries.
+        Tuple of (formatted markdown string, list of citation dicts).
     """
     try:
         params: dict = {
@@ -44,12 +44,13 @@ def fetch_trials(
         studies = data.get("studies", [])
 
         if not studies:
-            return f"**No clinical trials found for '{target}'.** Try a broader search term."
+            return f"**No clinical trials found for '{target}'.** Try a broader search term.", []
 
         total = data.get("totalCount", len(studies))
         summary = f"**{total} total trials found for '{target}'** (showing top {len(studies)}):\n\n"
+        citations: list[dict] = []
 
-        for study in studies:
+        for idx, study in enumerate(studies):
             proto = study.get("protocolSection", {})
             ident = proto.get("identificationModule", {})
             status_mod = proto.get("statusModule", {})
@@ -80,11 +81,27 @@ def fetch_trials(
                 f"  Conditions: {conditions}\n\n"
             )
 
-        return summary
+            # Build structured citation
+            url = f"https://clinicaltrials.gov/study/{nct_id}"
+            citations.append({
+                "id": f"ct-{idx + 1}",
+                "type": "clinical_trial",
+                "title": title,
+                "authors": sponsor_name,
+                "year": "",
+                "journal": "",
+                "url": url,
+                "pmid": "",
+                "doi": "",
+                "nct_id": nct_id,
+                "source_agent": "Trials Scout",
+            })
+
+        return summary, citations
 
     except requests.Timeout:
-        return f"**ClinicalTrials.gov timeout** for '{target}'. Service may be slow — try again."
+        return f"**ClinicalTrials.gov timeout** for '{target}'. Service may be slow — try again.", []
     except requests.RequestException as e:
-        return f"**ClinicalTrials.gov API error**: {e}"
+        return f"**ClinicalTrials.gov API error**: {e}", []
     except (KeyError, TypeError) as e:
-        return f"**Error parsing trial data**: {e}. Raw response may have unexpected format."
+        return f"**Error parsing trial data**: {e}. Raw response may have unexpected format.", []

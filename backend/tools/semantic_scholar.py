@@ -11,7 +11,7 @@ BASE_URL = "https://api.semanticscholar.org/graph/v1/paper/search"
 FIELDS = "title,authors,year,abstract,url,citationCount,externalIds"
 
 
-def search_papers(query: str, limit: int = 8) -> str:
+def search_papers(query: str, limit: int = 8) -> tuple[str, list[dict]]:
     """
     Search Semantic Scholar for papers matching a query.
 
@@ -23,7 +23,7 @@ def search_papers(query: str, limit: int = 8) -> str:
         limit: Maximum number of papers to return.
 
     Returns:
-        Formatted markdown string with paper summaries.
+        Tuple of (formatted markdown string, list of citation dicts).
     """
     params = {
         "query": query,
@@ -61,23 +61,24 @@ def search_papers(query: str, limit: int = 8) -> str:
             last_error = str(e)
             break
 
-    return f"**Semantic Scholar search failed** for '{query}': {last_error}. Try again later."
+    return f"**Semantic Scholar search failed** for '{query}': {last_error}. Try again later.", []
 
 
-def _format_results(data: dict, query: str) -> str:
-    """Format Semantic Scholar API response into markdown."""
+def _format_results(data: dict, query: str) -> tuple[str, list[dict]]:
+    """Format Semantic Scholar API response into markdown and structured citations."""
     total = data.get("total", 0)
     papers = data.get("data", [])
 
     if not papers:
-        return f"**No Semantic Scholar results for '{query}'.** Try different terms."
+        return f"**No Semantic Scholar results for '{query}'.** Try different terms.", []
 
     summary = f"**{total} Semantic Scholar results for '{query}'** (showing {len(papers)}):\n\n"
+    citations: list[dict] = []
 
-    for paper in papers:
+    for idx, paper in enumerate(papers):
         title = paper.get("title", "Untitled") or "Untitled"
         year = paper.get("year", "N/A")
-        citations = paper.get("citationCount", 0)
+        citation_count = paper.get("citationCount", 0)
         url = paper.get("url", "")
 
         # Authors (first 3)
@@ -91,16 +92,39 @@ def _format_results(data: dict, query: str) -> str:
         abstract = paper.get("abstract", "No abstract available.") or "No abstract available."
         abstract = (abstract[:300] + "...") if len(abstract) > 300 else abstract
 
-        # ArXiv link if available
+        # External IDs (DOI, ArXiv)
         ext_ids = paper.get("externalIds", {}) or {}
         arxiv_id = ext_ids.get("ArXiv", "")
-        link = f"https://arxiv.org/abs/{arxiv_id}" if arxiv_id else url
+        doi = ext_ids.get("DOI", "")
+
+        # Best link: DOI > ArXiv > Semantic Scholar URL
+        if doi:
+            link = f"https://doi.org/{doi}"
+        elif arxiv_id:
+            link = f"https://arxiv.org/abs/{arxiv_id}"
+        else:
+            link = url
 
         summary += (
-            f"- **{title}** ({year}, {citations} citations)\n"
+            f"- **{title}** ({year}, {citation_count} citations)\n"
             f"  Authors: {author_str}\n"
             f"  Link: {link}\n"
             f"  Abstract: {abstract}\n\n"
         )
 
-    return summary
+        # Build structured citation
+        citations.append({
+            "id": f"ss-{idx + 1}",
+            "type": "semantic_scholar",
+            "title": title,
+            "authors": author_str,
+            "year": str(year) if year else "",
+            "journal": "",
+            "url": link,
+            "pmid": "",
+            "doi": doi,
+            "nct_id": "",
+            "source_agent": "Literature Miner",
+        })
+
+    return summary, citations

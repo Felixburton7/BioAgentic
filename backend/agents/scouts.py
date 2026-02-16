@@ -40,6 +40,26 @@ def _criteria_context(state: BiotechState) -> str:
     return ""
 
 
+def _format_citation_block(citations: list[dict]) -> str:
+    """Build a citation reference block for LLM prompts."""
+    if not citations:
+        return ""
+    lines = ["\n\n## Available Citations (use these for references)"]
+    for c in citations:
+        label = f"[{c.get('id', '')}]"
+        parts = [c.get("title", "")]
+        if c.get("authors"):
+            parts.append(f"by {c['authors']}")
+        if c.get("year"):
+            parts.append(f"({c['year']})")
+        if c.get("journal"):
+            parts.append(f"in {c['journal']}")
+        if c.get("url"):
+            parts.append(f"URL: {c['url']}")
+        lines.append(f"- {label} {' — '.join(parts)}")
+    return "\n".join(lines)
+
+
 # =====================================================================
 # Trials Scout
 # =====================================================================
@@ -54,6 +74,7 @@ class TrialsScout:
         2. Fetch trials from ClinicalTrials.gov (sync tool → threaded).
         3. LLM-analyse the raw data using ``BIOTECH_PROMPTS["trials_scout"]``.
         4. Store raw data in ``state.api_data["trials"]``.
+        5. Collect structured citations into ``state.citations``.
         """
         condition_query = _get_query(state, "clinicaltrials_condition")
         intervention_query = _get_query(state, "clinicaltrials_intervention")
@@ -70,26 +91,31 @@ class TrialsScout:
             intervention,
         )
 
-        raw_trials: str = await asyncio.to_thread(
+        raw_trials, trial_citations = await asyncio.to_thread(
             fetch_trials, condition_query, intervention=intervention
         )
 
         criteria_block = _criteria_context(state)
+        citation_block = _format_citation_block(trial_citations)
         analysis = await acall_llm(
             system_prompt=BIOTECH_PROMPTS[self.PROMPT_KEY],
             user_prompt=(
                 f"Target: {state['target']}\n\n"
                 f"Clinical trial data:\n{raw_trials}"
                 f"{criteria_block}"
+                f"{citation_block}"
             ),
         )
 
         existing_api: dict = state.get("api_data", {})  # type: ignore[arg-type]
         updated_api = {**existing_api, "trials": raw_trials}
 
+        existing_citations: list = state.get("citations", [])  # type: ignore[arg-type]
+
         return {
             "api_data": updated_api,
             "agents_log": [{"agent": "Trials Scout", "content": analysis}],
+            "citations": existing_citations + trial_citations,
         }
 
 
@@ -107,6 +133,7 @@ class LitScout:
         2. Fetch PubMed and Semantic Scholar data concurrently.
         3. Combine and LLM-analyse using ``BIOTECH_PROMPTS["literature_miner"]``.
         4. Store combined raw data in ``state.api_data["papers"]``.
+        5. Collect structured citations into ``state.citations``.
         """
         pubmed_query = _get_query(state, "pubmed_query")
         semantic_query = _get_query(state, "semantic_scholar_query")
@@ -117,7 +144,7 @@ class LitScout:
             semantic_query,
         )
 
-        pubmed_data, semantic_data = await asyncio.gather(
+        (pubmed_data, pm_citations), (semantic_data, ss_citations) = await asyncio.gather(
             asyncio.to_thread(fetch_papers, pubmed_query),
             asyncio.to_thread(search_papers, semantic_query),
         )
@@ -127,13 +154,16 @@ class LitScout:
             f"## Semantic Scholar Results\n{semantic_data}"
         )
 
+        all_new_citations = pm_citations + ss_citations
         criteria_block = _criteria_context(state)
+        citation_block = _format_citation_block(all_new_citations)
         analysis = await acall_llm(
             system_prompt=BIOTECH_PROMPTS[self.PROMPT_KEY],
             user_prompt=(
                 f"Target: {state['target']}\n\n"
                 f"Academic literature data:\n{combined}"
                 f"{criteria_block}"
+                f"{citation_block}"
             ),
         )
 
@@ -145,9 +175,12 @@ class LitScout:
             "papers": combined,
         }
 
+        existing_citations: list = state.get("citations", [])  # type: ignore[arg-type]
+
         return {
             "api_data": updated_api,
             "agents_log": [{"agent": "Literature Miner", "content": analysis}],
+            "citations": existing_citations + all_new_citations,
         }
 
 
