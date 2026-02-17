@@ -1,6 +1,6 @@
 <div align="center">
   <img src="logo.png" alt="BioAgentic Logo" width="200"/>
-  <h1>TrialAgent </h1>
+  <h1>ClinicalAgents </h1>
   <p><strong>Agentic research for clinical trail data.</strong></p>
   
   <p>Designed by Felix & Fred to help research at Cambridge.</p>
@@ -12,7 +12,7 @@
 
 <br/>
 
-BioAgentic is an open-source tool that acts as a research partner. It reads the papers checks the trials data, and debates hypotheses to keep it accurate & honest.
+ClinicalAgents is an open-source tool that acts as a research partner. It reads the papers checks the trials data, and debates hypotheses to keep it accurate & honest.
 
 We built this because as "black box" AI tools that give answers without showing the work. BioAgentic is open, transparent, and designed to help you think faster, not just retrieve links. It can run locally, respects privacy, and cites its sources.
 
