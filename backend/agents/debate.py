@@ -6,6 +6,7 @@ Denario maker/hater iterative pattern.  All calls are async.
 
 from __future__ import annotations
 
+import json
 from typing import Any, Dict, List
 
 from ..config import acall_llm, REASONING_MODEL
@@ -138,13 +139,20 @@ class Synthesizer:
         debate: dict = state.get("debate", {})  # type: ignore[arg-type]
         debate_history: str = debate.get("history", "")
         citations: list = state.get("citations", [])  # type: ignore[arg-type]
+        trial_publications = api_data.get("trial_publications", [])
 
         citation_registry = _format_citation_registry(citations)
+        try:
+            trial_publications_json = json.dumps(trial_publications, indent=2)
+        except (TypeError, ValueError):
+            trial_publications_json = "[]"
 
         full_context = (
             f"# Research Target: {target}\n\n"
             f"## Target Analysis\n{analysis}\n\n"
             f"## Clinical Trial Data\n{api_data.get('trials', 'N/A')}\n\n"
+            f"## Verified Trial-Publication Links (ClinicalTrials.gov Results References)\n"
+            f"```json\n{trial_publications_json}\n```\n\n"
             f"## PubMed Literature\n{api_data.get('pubmed', 'N/A')[:800]}\n\n"
             f"## Semantic Scholar Literature\n{api_data.get('semantic', 'N/A')[:800]}\n\n"
             f"## Generated Hypotheses\n{hypotheses}\n\n"

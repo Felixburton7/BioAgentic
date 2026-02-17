@@ -240,6 +240,11 @@ Format your output exactly as below. Use markdown tables where indicated.
 ## Recommended Next Steps
 - [2-3 actionable suggestions as bullets]
 
+### Trial-to-Publication Mapping (Verified)
+| NCT ID | Clinical Trial | Published Paper | PMID |
+|--------|----------------|-----------------|------|
+[Include every trial from the provided "Verified Trial-Publication Links" context. Use only explicit results-linked references from ClinicalTrials.gov. Use markdown links for trial and publication URLs when available. If a trial has no results publication, include a row that says "No results-linked publication listed on ClinicalTrials.gov".]
+
 ## References
 [List of all papers and trials actually referenced in this brief. Each reference MUST use Author-Year format with a clickable markdown link using the URL from the **Citation Registry**:
 - For papers: Author(s), "Title", Journal (Year). [Link](url)
@@ -255,6 +260,7 @@ Format your output exactly as below. Use markdown tables where indicated.
 6. **ONLY** use citations from the Citation Registry — do NOT fabricate URLs or DOIs.
 7. If you cannot find a URL for a source, omit the link but still cite the author/year in parentheses (Author et al., Year).
 8. **NEVER** include internal citation IDs like [ct-1], [pm-2], [ss-3] in the output.
+9. **TRIAL-TO-PAPER PAIRING**: Never pair a trial with a publication unless that exact relationship appears in the verified trial-publication links context.
 
 Be comprehensive but concise. Bold critical terms and findings. Use actual data from the pipeline — do NOT fabricate numbers. If exact counts are unavailable, use approximate counts from the data provided. This brief should be useful to a biotech decision-maker."""
 
@@ -416,4 +422,3 @@ BIOTECH_PROMPTS: dict[str, str] = {
     "followup_mediator": FOLLOW_UP_MEDIATOR,
     "followup_synthesizer": FOLLOW_UP_SYNTHESIZER,
 }
-

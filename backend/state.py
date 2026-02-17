@@ -25,6 +25,7 @@ class SearchCriteria(TypedDict, total=False):
 class APIData(TypedDict, total=False):
     """Raw results from external API calls."""
     trials: str       # Formatted clinical trials summary
+    trial_publications: list[dict]  # Verified trial -> publication mappings
     pubmed: str       # Formatted PubMed abstracts
     semantic: str     # Formatted Semantic Scholar results
 

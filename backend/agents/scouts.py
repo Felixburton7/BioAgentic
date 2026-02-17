@@ -60,6 +60,36 @@ def _format_citation_block(citations: list[dict]) -> str:
     return "\n".join(lines)
 
 
+def _build_trial_citations(trial_publications: list[dict]) -> list[dict]:
+    """Derive structured trial citations from verified trial publication mappings."""
+    citations: list[dict] = []
+    for idx, trial in enumerate(trial_publications, 1):
+        nct_id = str(trial.get("nct_id", "") or "").strip()
+        title = str(trial.get("title", "") or "Untitled").strip()
+        trial_url = str(trial.get("trial_url", "") or "").strip()
+        if not trial_url and nct_id:
+            trial_url = f"https://clinicaltrials.gov/study/{nct_id}"
+        status = str(trial.get("status", "") or "").strip()
+        phase = str(trial.get("phase", "") or "").strip()
+        context_bits = [bit for bit in [status, phase] if bit]
+        journal = " | ".join(context_bits)
+
+        citations.append({
+            "id": f"ct-{idx}",
+            "type": "clinical_trial",
+            "title": title,
+            "authors": "",
+            "year": "",
+            "journal": journal,
+            "url": trial_url,
+            "pmid": "",
+            "doi": "",
+            "nct_id": nct_id,
+            "source_agent": "Trials Scout",
+        })
+    return citations
+
+
 # =====================================================================
 # Trials Scout
 # =====================================================================
@@ -73,8 +103,8 @@ class TrialsScout:
         1. Build query from analyzer's search criteria.
         2. Fetch trials from ClinicalTrials.gov (sync tool → threaded).
         3. LLM-analyse the raw data using ``BIOTECH_PROMPTS["trials_scout"]``.
-        4. Store raw data in ``state.api_data["trials"]``.
-        5. Collect structured citations into ``state.citations``.
+        4. Store trial summaries + verified trial/publication mappings in ``state.api_data``.
+        5. Convert trials into structured citations and append into ``state.citations``.
         """
         condition_query = _get_query(state, "clinicaltrials_condition")
         intervention_query = _get_query(state, "clinicaltrials_intervention")
@@ -91,9 +121,10 @@ class TrialsScout:
             intervention,
         )
 
-        raw_trials, trial_citations = await asyncio.to_thread(
+        raw_trials, trial_publications = await asyncio.to_thread(
             fetch_trials, condition_query, intervention=intervention
         )
+        trial_citations = _build_trial_citations(trial_publications)
 
         criteria_block = _criteria_context(state)
         citation_block = _format_citation_block(trial_citations)
@@ -108,7 +139,11 @@ class TrialsScout:
         )
 
         existing_api: dict = state.get("api_data", {})  # type: ignore[arg-type]
-        updated_api = {**existing_api, "trials": raw_trials}
+        updated_api = {
+            **existing_api,
+            "trials": raw_trials,
+            "trial_publications": trial_publications,
+        }
 
         existing_citations: list = state.get("citations", [])  # type: ignore[arg-type]
 
