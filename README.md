@@ -1,6 +1,6 @@
 <div align="center">
   <img src="logo.png" alt="BioAgentic Logo" width="200"/>
-  <h1>TrailScout AI </h1>
+  <h1>TrialAgent </h1>
   <p><strong>Agentic research for clinical trail data.</strong></p>
   
   <p>Designed by Felix & Fred to help research at Cambridge.</p>
