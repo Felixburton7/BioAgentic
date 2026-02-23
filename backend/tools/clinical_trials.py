@@ -85,22 +85,21 @@ def fetch_trials(
     target: str,
     max_results: int = 10,
     intervention: str | None = None,
+    include_publications: bool = False,
 ) -> Tuple[str, List[Dict[str, Any]]]:
     """
     Search ClinicalTrials.gov for studies matching a target/condition.
-
-    Uses the REST API v2 endpoint:
-    https://clinicaltrials.gov/data-api/api
-
+    
     Args:
-        target: Search term for the condition field (e.g. "KRAS G12C", "lung cancer").
+        target: Search term for the condition field.
         max_results: Maximum number of studies to return.
-        intervention: Optional intervention/drug search term for the intervention field.
+        intervention: Optional intervention/drug search term.
+        include_publications: Whether to fetch and map results publications (slower).
 
     Returns:
         Tuple:
-          1) Formatted markdown string with trial summaries + verified trial/publication table.
-          2) Structured list of trial/publication mappings for downstream report synthesis.
+          1) Formatted markdown string summary.
+          2) Structured list of trial/publication mappings.
     """
     try:
         params: dict = {
@@ -109,6 +108,7 @@ def fetch_trials(
         }
         if intervention:
             params["query.intr"] = intervention
+            
         resp = requests.get(
             "https://clinicaltrials.gov/api/v2/studies",
             params=params,
@@ -145,7 +145,7 @@ def fetch_trials(
                 phases = "N/A"
             trial_url = f"https://clinicaltrials.gov/study/{nct_id}" if nct_id != "N/A" else ""
 
-            # Enrollment (may be nested)
+            # Enrollment
             enrollment_info = design.get("enrollmentInfo", {})
             enrollment = enrollment_info.get("count", "N/A") if isinstance(enrollment_info, dict) else "N/A"
 
@@ -164,7 +164,11 @@ def fetch_trials(
             if not conditions:
                 conditions = "N/A"
 
-            result_publications = _extract_results_publications(study)
+            # Only fetch publications if requested
+            result_publications = []
+            if include_publications:
+                result_publications = _extract_results_publications(study)
+            
             trial_publication_links.append(
                 {
                     "nct_id": nct_id,
@@ -183,45 +187,47 @@ def fetch_trials(
                 f"  Conditions: {conditions}\n"
             )
 
-            if result_publications:
-                summary += "  Results publications (verified trial-linked references):\n"
-                for publication in result_publications:
-                    pmid = publication.get("pmid", "N/A")
-                    citation = _safe_text(publication.get("citation", ""), max_len=180)
-                    summary += f"  - PMID {pmid}: {citation}\n"
-            else:
-                summary += "  Results publications: None listed on ClinicalTrials.gov\n"
+            if include_publications:
+                if result_publications:
+                    summary += "  Results publications (verified trial-linked references):\n"
+                    for publication in result_publications:
+                        pmid = publication.get("pmid", "N/A")
+                        citation = _safe_text(publication.get("citation", ""), max_len=180)
+                        summary += f"  - PMID {pmid}: {citation}\n"
+                else:
+                    summary += "  Results publications: None listed on ClinicalTrials.gov\n"
 
             summary += "\n"
 
-        summary += "### Trial-to-Publication Mapping (ClinicalTrials.gov Results References)\n\n"
-        summary += "| NCT ID | Clinical Trial | Published Paper | PMID |\n"
-        summary += "|---|---|---|---|\n"
+        if include_publications:
+            summary += "### Trial-to-Publication Mapping (ClinicalTrials.gov Results References)\n\n"
+            summary += "| NCT ID | Clinical Trial | Published Paper | PMID |\n"
+            summary += "|---|---|---|---|\n"
 
-        for trial in trial_publication_links:
-            nct_id = _safe_text(trial.get("nct_id", "N/A"), max_len=20) or "N/A"
-            title_cell = _escape_md_table(str(trial.get("title", "Untitled")), max_len=120) or "Untitled"
-            trial_url = _safe_text(trial.get("trial_url", ""), max_len=200)
-            trial_cell = f"[{nct_id}]({trial_url})" if trial_url else nct_id
+            for trial in trial_publication_links:
+                nct_id = _safe_text(trial.get("nct_id", "N/A"), max_len=20) or "N/A"
+                title_cell = _escape_md_table(str(trial.get("title", "Untitled")), max_len=120) or "Untitled"
+                trial_url = _safe_text(trial.get("trial_url", ""), max_len=200)
+                trial_cell = f"[{nct_id}]({trial_url})" if trial_url else nct_id
 
-            publications = trial.get("results_publications", []) or []
-            if publications:
-                for publication in publications:
-                    citation = _escape_md_table(
-                        str(publication.get("citation", "Publication record")),
-                        max_len=190,
-                    ) or "Publication record"
-                    pmid = _escape_md_table(str(publication.get("pmid", "N/A")), max_len=32) or "N/A"
-                    pubmed_url = _safe_text(publication.get("url", ""), max_len=200)
-                    paper_cell = f"[{citation}]({pubmed_url})" if pubmed_url else citation
-                    summary += f"| {trial_cell} | {title_cell} | {paper_cell} | {pmid} |\n"
-            else:
-                summary += (
-                    f"| {trial_cell} | {title_cell} | "
-                    "No results-linked publication listed on ClinicalTrials.gov | N/A |\n"
-                )
-
-        summary += "\n"
+                publications = trial.get("results_publications", []) or []
+                if publications:
+                    for publication in publications:
+                        citation = _escape_md_table(
+                            str(publication.get("citation", "Publication record")),
+                            max_len=190,
+                        ) or "Publication record"
+                        pmid = _escape_md_table(str(publication.get("pmid", "N/A")), max_len=32) or "N/A"
+                        pubmed_url = _safe_text(publication.get("url", ""), max_len=200)
+                        paper_cell = f"[{citation}]({pubmed_url})" if pubmed_url else citation
+                        summary += f"| {trial_cell} | {title_cell} | {paper_cell} | {pmid} |\n"
+                else:
+                    summary += (
+                        f"| {trial_cell} | {title_cell} | "
+                        "No results-linked publication listed on ClinicalTrials.gov | N/A |\n"
+                    )
+            summary += "\n"
+            
         return summary, trial_publication_links
 
     except requests.Timeout:
@@ -236,3 +242,59 @@ def fetch_trials(
             f"**Error parsing trial data**: {e}. Raw response may have unexpected format.",
             [],
         )
+
+
+def find_trial_papers(
+    target: str,
+    max_results: int = 15,
+) -> str:
+    """
+    Specifically search for papers linked to clinical trials.
+    
+    Args:
+        target: The condition/target to search trials for.
+        max_results: Max trials to check.
+        
+    Returns:
+        Formatted markdown containing ONLY the trial-to-publication mapping table.
+    """
+    # Reuse fetch_trials with include_publications=True
+    # We ignore the main summary and just extract the table part manually or via a helper
+    _, trials_data = fetch_trials(target, max_results=max_results, include_publications=True)
+    
+    if not trials_data:
+        return f"No clinical trials found for '{target}' to check for papers."
+        
+    # Build just the table part
+    has_any_papers = any(t.get("results_publications") for t in trials_data)
+    
+    output = f"### Clinical Trial Papers for '{target}'\n\n"
+    
+    if not has_any_papers:
+        output += "No results-linked publications were found on ClinicalTrials.gov for the top trials matching your query.\n"
+        return output
+        
+    output += "| NCT ID | Clinical Trial | Published Paper | PMID |\n"
+    output += "|---|---|---|---|\n"
+
+    for trial in trials_data:
+        publications = trial.get("results_publications", [])
+        if not publications:
+            continue
+            
+        nct_id = _safe_text(trial.get("nct_id", "N/A"), max_len=20) or "N/A"
+        title_cell = _escape_md_table(str(trial.get("title", "Untitled")), max_len=120) or "Untitled"
+        trial_url = _safe_text(trial.get("trial_url", ""), max_len=200)
+        trial_cell = f"[{nct_id}]({trial_url})" if trial_url else nct_id
+
+        for publication in publications:
+            citation = _escape_md_table(
+                str(publication.get("citation", "Publication record")),
+                max_len=190,
+            ) or "Publication record"
+            pmid = _escape_md_table(str(publication.get("pmid", "N/A")), max_len=32) or "N/A"
+            pubmed_url = _safe_text(publication.get("url", ""), max_len=200)
+            paper_cell = f"[{citation}]({pubmed_url})" if pubmed_url else citation
+            output += f"| {trial_cell} | {title_cell} | {paper_cell} | {pmid} |\n"
+
+    return output

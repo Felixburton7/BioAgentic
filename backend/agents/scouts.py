@@ -122,7 +122,7 @@ class TrialsScout:
         )
 
         raw_trials, trial_publications = await asyncio.to_thread(
-            fetch_trials, condition_query, intervention=intervention
+            fetch_trials, condition_query, intervention=intervention, include_publications=False
         )
         trial_citations = _build_trial_citations(trial_publications)
 

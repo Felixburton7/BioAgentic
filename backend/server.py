@@ -8,6 +8,7 @@ import os
 import sys
 import time
 import uuid
+import asyncio
 import logging
 from datetime import datetime
 from typing import List, Optional
@@ -398,6 +399,24 @@ async def followup_research(req: FollowUpRequest):
             yield f"data: {json.dumps({'event': 'error', 'detail': str(e)})}\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
+class TrialPapersRequest(BaseModel):
+    """Request to find papers linked to clinical trials."""
+    target: str
+
+
+@app.post("/research/trials-papers")
+async def get_trial_papers(req: TrialPapersRequest):
+    """
+    Specifically fetch papers linked to clinical trials for a target.
+    Returns a JSON object with the markdown table.
+    """
+    from .tools.clinical_trials import find_trial_papers
+    
+    # Run in thread pool to avoid blocking
+    markdown = await asyncio.to_thread(find_trial_papers, req.target)
+    return {"markdown": markdown}
 
 
 
