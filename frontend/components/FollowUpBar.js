@@ -288,45 +288,7 @@ export default function FollowUpBar({ brief, target }) {
                         gap: "12px" // Closer spacing
                     }}
                 >
-                    {/* Top: Find Papers Button */}
-                    <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "12px",
-                            paddingLeft: "4px"
-                        }}
-                    >
-                        <button
-                            type="button"
-                            className="find-papers-btn"
-                            onClick={handleFindPapers}
-                            disabled={isLoading}
-                            style={{
-                                padding: "8px 16px",
-                                backgroundColor: "var(--bg-secondary)",
-                                border: "1px solid var(--border)",
-                                borderRadius: "var(--radius-md)",
-                                cursor: "pointer",
-                                fontSize: "14px",
-                                fontWeight: "500",
-                                color: "var(--text-primary)",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "8px",
-                                transition: "all 0.2s"
-                            }}
-                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = "var(--bg-tertiary)"}
-                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
-                        >
-                            Find related clinical trial papers
-                        </button>
-                        <span style={{ fontSize: "13px", color: "var(--text-muted)" }}>
-                            Deep search for publications linked to these trials
-                        </span>
-                    </div>
-
-                    {/* Bottom: Search Bar */}
+                    {/* Top: Search Bar */}
                     <form className="follow-up-bar" onSubmit={handleSubmit}>
                         <select
                             className="follow-up-rounds"
@@ -372,6 +334,44 @@ export default function FollowUpBar({ brief, target }) {
                             )}
                         </button>
                     </form>
+
+                    {/* Bottom: Find Papers Button */}
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "12px",
+                            paddingLeft: "4px"
+                        }}
+                    >
+                        <button
+                            type="button"
+                            className="find-papers-btn"
+                            onClick={handleFindPapers}
+                            disabled={isLoading}
+                            style={{
+                                padding: "8px 16px",
+                                backgroundColor: "var(--bg-secondary)",
+                                border: "1px solid var(--border)",
+                                borderRadius: "var(--radius-md)",
+                                cursor: "pointer",
+                                fontSize: "14px",
+                                fontWeight: "500",
+                                color: "var(--text-primary)",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                                transition: "all 0.2s"
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = "var(--bg-tertiary)"}
+                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
+                        >
+                            Find related clinical trial papers
+                        </button>
+                        <span style={{ fontSize: "13px", color: "var(--text-muted)" }}>
+                            Deep search for publications linked to these trials
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
