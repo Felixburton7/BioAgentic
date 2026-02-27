@@ -12,9 +12,9 @@
 
 <br/>
 
-ClinicalAgents is an open-source tool that acts as a research partner. It reads the papers checks the trials data, and debates hypotheses to keep it accurate & honest.
+ClinicalAgents is an open-source tool that acts as a research partner. It searches both **ClinicalTrials.gov** and **academic literature** (PubMed, Semantic Scholar), analyzes the data, and rigorously debates hypotheses to keep outputs accurate and honest.
 
-We built this because as "black box" AI tools that give answers without showing the work. BioAgentic is open, transparent, and designed to help you think faster, not just retrieve links. It can run locally, respects privacy, and cites its sources.
+We built this because "black box" AI tools often give answers without showing their work. BioAgentic is open, transparent, and designed to help you think faster, not just retrieve links. It can run locally, respects privacy, and meticulously cites its sources.
 
 ## Quick Start
 Get up and running in seconds. You'll need Python 3.11+, Node 18+, and a Grok API key.
@@ -33,23 +33,44 @@ cp .env.example .env
 
 The backend will start on port `8000` and the frontend on `3000`.
 
-## How it Works
+## How it Works: The Research Pipeline
 
 BioAgentic doesn't just search; it thinks. When you give it a target (like "KRAS G12C"), it spins up a team of specialized agents:
 
 ```mermaid
 graph LR
     A[You Ask] --> |"KRAS G12C"| B(Scouts)
-    B --> |Trials & Papers| C(Hypothesize)
+    B --> |Clinical Trials & Literature| C(Hypothesize)
     C --> D{Debate Loop}
     D -- Advocate vs Skeptic --> D
     D --> E[Final Brief]
 ```
 
-1.  **Scout**: Agents mine real-time data from the **ClinicalTrials.gov API v2**, extracting key details like recruitment status, enrollment numbers, sponsors, and conditions. They also cross-reference this with academic literature (PubMed, Semantic Scholar).
-2.  **Hypothesize**: It generates novel hypotheses based on the raw data.
-3.  **Debate**: An "Advocate" and a "Skeptic" agent debate these hypotheses in rounds, with a Mediator keeping them on track. This adversarial process kills hallucinations and sharpens arguments.
-4.  **Synthesize**: You get a clean, cited research brief.
+1.  **Scout**: Agents mine real-time data from the **ClinicalTrials.gov API v2** for trial status, enrollment, and sponsors. Crucially, they also cross-reference this by searching **PubMed** and **Semantic Scholar** for primary academic literature.
+2.  **Hypothesize**: It generates novel hypotheses based on the synthesis of raw trial data and academic papers.
+3.  **Debate**: An "Advocate" and a "Skeptic" agent vigorously debate these hypotheses in rounds, with a Mediator keeping them on track. This adversarial agentic process kills hallucinations, sharpens arguments, and ensures only strong, evidence-backed claims surface.
+4.  **Synthesize**: You get a clean, deeply-cited research brief.
+
+## Deep Dive: Clinical Trial → Publication Linking
+
+Once initial research is complete, you can trigger a specialized multi-agent pipeline to find **hidden links** between clinical trials and published papers/datasets (the "Find related clinical trial papers" feature).
+
+```mermaid
+flowchart TD
+    A["NCT IDs from research"] --> C["Linking Orchestrator"]
+    C --> E["Registry Enricher\n(per-NCT metadata)"]
+    E --> F["PubMed Linker +\nRepository Search (Parallel)"]
+    F --> G["Full-Text Extractor\n(Europe PMC)"]
+    G --> H["Link Validator\n(Confidence Scoring)"]
+    H --> I["Verified Markdown Report"]
+```
+
+This dedicated pipeline:
+1. **Enriches** trial metadata directly from the ClinicalTrials.gov registry.
+2. **Searches** PubMed creatively (by NCT ID and heuristic titles) and queries data repositories (Zenodo, Vivli).
+3. **Extracts** full text via Europe PMC to look for embedded Data Availability Statements.
+4. **Validates** all findings with a reasoning agent that deduplicates results and assigns High/Medium/Low confidence tiers to the trial-publication pairing.
+5. Streams the entire thought process and results directly to the UI in real-time.
 
 ## Deployment
 
