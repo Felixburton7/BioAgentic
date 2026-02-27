@@ -12,9 +12,11 @@
 
 <br/>
 
-ClinicalAgents is an open-source tool that acts as a research partner. It searches both **ClinicalTrials.gov** and **academic literature** (PubMed, Semantic Scholar), analyzes the data, and rigorously debates hypotheses to keep outputs accurate and honest.
+ClinicalAgents is an open-source tool that acts as a research partner. It uses [LangGraph](https://www.langchain.com/langgraph) to orchestrate agents that search clinical trials and academic literature ([PubMed](https://pubmed.ncbi.nlm.nih.gov/), [Semantic Scholar](https://www.semanticscholar.org/)), analyse the data, and rigorously debate hypotheses to keep outputs accurate and honest as well as giving a clear thought process.
 
-We built this because "black box" AI tools often give answers without showing their work. BioAgentic is open, transparent, and designed to help you think faster, not just retrieve links. It can run locally, respects privacy, and meticulously cites its sources.
+We built this to explore the power of agentic search systems and provide a useful tool for researchers to use. BioAgentic is open, transparent, and designed to help you think faster, not just retrieve links. It can run locally, respects privacy, and meticulously cites its sources.
+
+The project was inspired by [Denario](https://github.com/AstroPilot-AI/Denario/tree/master) and [ASCollab](https://arxiv.org/html/2510.08619v1).
 
 ## Quick Start
 Get up and running in seconds. You'll need Python 3.11+, Node 18+, and a Grok API key.
