@@ -58,6 +58,25 @@ class Citation(TypedDict, total=False):
     source_agent: str # which agent discovered this citation
 
 
+class LinkingTrialRecord(TypedDict, total=False):
+    """Per-NCT state record for the linking pipeline."""
+    nct_id: str                 # e.g. "NCT01234567"
+    registry: dict              # enriched registry metadata (titles, PI, dates, refs)
+    pubmed_candidates: list     # ranked PMIDs with confidence scores
+    fulltext_data: list         # data availability extractions per publication
+    repository_hits: list       # dataset records from repositories
+    final_links: dict           # validated publications + datasets + confidence
+
+
+class LinkingState(TypedDict, total=False):
+    """State for the clinical trial → publication linking pipeline."""
+    target: str                         # user's research target
+    trials: List[LinkingTrialRecord]    # per-NCT enrichment records
+    agents_log: List[AgentLog]          # agent output log for SSE streaming
+    status: str                         # current pipeline step description
+    final_markdown: str                 # final synthesized markdown output
+
+
 class BiotechState(TypedDict, total=False):
     """
     Main graph state — passed between all LangGraph nodes.

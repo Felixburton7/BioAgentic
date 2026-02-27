@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import ActivityTrace from "./ActivityTrace";
 import AgentCard from "./AgentCard";
 
 /**
@@ -12,7 +13,7 @@ import AgentCard from "./AgentCard";
  *   brief    – the completed research brief (string)
  *   target   – the research target (string)
  */
-export default function FollowUpBar({ brief, target }) {
+export default function FollowUpBar({ brief, target, citations = [] }) {
     const [question, setQuestion] = useState("");
     const [rounds, setRounds] = useState(1);
     const [followUps, setFollowUps] = useState([]); // [{question, answer, agents, isStreaming}]
@@ -32,38 +33,115 @@ export default function FollowUpBar({ brief, target }) {
         setFollowUps((prev) => [
             ...prev,
             {
-                question: "Find clinical trial papers",
+                question: "Find related clinical trial papers",
                 answer: "",
                 agents: [],
+                traces: [],
                 isStreaming: true,
                 isSystemAction: true
             },
         ]);
 
+        const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
         try {
-            const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+            // Extract NCT IDs from citations found during initial research
+            const nctIds = citations
+                .filter(c => c.type === "clinical_trial" && c.nct_id)
+                .map(c => c.nct_id);
+
             const res = await fetch(`${API}/research/trials-papers`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ target }),
+                body: JSON.stringify({ target, nct_ids: nctIds }),
             });
 
             if (!res.ok) throw new Error("Failed to fetch papers");
 
-            const data = await res.json();
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = "";
 
-            setFollowUps((prev) =>
-                prev.map((fu, i) =>
-                    i === idx
-                        ? { ...fu, isStreaming: false, answer: data.markdown }
-                        : fu
-                )
-            );
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split("\n");
+                buffer = lines.pop() || "";
+
+                for (const line of lines) {
+                    if (!line.startsWith("data: ")) continue;
+                    try {
+                        const data = JSON.parse(line.slice(6));
+
+                        if (data.event === "done") {
+                            setFollowUps((prev) =>
+                                prev.map((fu, i) =>
+                                    i === idx ? { ...fu, isStreaming: false } : fu
+                                )
+                            );
+                        } else if (data.event === "error") {
+                            setFollowUps((prev) =>
+                                prev.map((fu, i) =>
+                                    i === idx
+                                        ? { ...fu, isStreaming: false, answer: `Error: ${data.detail}` }
+                                        : fu
+                                )
+                            );
+                        } else if (data.event === "status") {
+                            // Add a new trace step and update status message
+                            setFollowUps((prev) =>
+                                prev.map((fu, i) => {
+                                    if (i !== idx) return fu;
+                                    // Mark previous traces as done
+                                    const updatedTraces = fu.traces.map(t =>
+                                        t.done ? t : { ...t, done: true, duration: ((Date.now() - (t._startTime || Date.now())) / 1000).toFixed(1) }
+                                    );
+                                    // Add new trace
+                                    updatedTraces.push({
+                                        message: data.content,
+                                        node: data.agent || "linking",
+                                        done: false,
+                                        _startTime: Date.now(),
+                                    });
+                                    return { ...fu, statusMessage: data.content, traces: updatedTraces };
+                                })
+                            );
+                        } else if (data.event === "agent" || data.agent) {
+                            // Agent output — accumulate in agents list
+                            setFollowUps((prev) =>
+                                prev.map((fu, i) => {
+                                    if (i !== idx) return fu;
+                                    const newAgents = [
+                                        ...fu.agents,
+                                        { agent: data.agent, content: data.content },
+                                    ];
+                                    return { ...fu, agents: newAgents };
+                                })
+                            );
+                        } else if (data.event === "result") {
+                            // Final markdown result — mark all traces done
+                            setFollowUps((prev) =>
+                                prev.map((fu, i) => {
+                                    if (i !== idx) return fu;
+                                    const finalTraces = fu.traces.map(t =>
+                                        t.done ? t : { ...t, done: true, duration: ((Date.now() - (t._startTime || Date.now())) / 1000).toFixed(1) }
+                                    );
+                                    return { ...fu, answer: data.content, traces: finalTraces };
+                                })
+                            );
+                        }
+                    } catch {
+                        // skip malformed lines
+                    }
+                }
+            }
         } catch (err) {
             setFollowUps((prev) =>
                 prev.map((fu, i) =>
                     i === idx
-                        ? { ...fu, isStreaming: false, answer: "Failed to find clinical trial papers." }
+                        ? { ...fu, isStreaming: false, answer: `Connection error: ${err.message}` }
                         : fu
                 )
             );
@@ -238,11 +316,22 @@ export default function FollowUpBar({ brief, target }) {
                     )}
 
                     {/* Synthesized answer */}
+                    {/* Live activity traces for the linking pipeline */}
+                    {fu.isSystemAction && fu.traces && fu.traces.length > 0 && (
+                        <div style={{ marginTop: "12px" }}>
+                            <ActivityTrace traces={fu.traces} isStreaming={fu.isStreaming} />
+                        </div>
+                    )}
+
                     {fu.isStreaming && !fu.answer && (
                         <div className="streaming-indicator" style={{ marginTop: "12px" }}>
                             <span className="spinner" />
                             <span>
-                                {fu.isSystemAction ? "Searching clinical trials..." : "Analyzing your question…"}
+                                {fu.statusMessage
+                                    ? fu.statusMessage
+                                    : fu.isSystemAction
+                                        ? "Searching clinical trials..."
+                                        : "Analyzing your question…"}
                             </span>
                         </div>
                     )}

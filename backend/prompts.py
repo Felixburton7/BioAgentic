@@ -240,11 +240,6 @@ Format your output exactly as below. Use markdown tables where indicated.
 ## Recommended Next Steps
 - [2-3 actionable suggestions as bullets]
 
-### Trial-to-Publication Mapping (Verified)
-| NCT ID | Clinical Trial | Published Paper | PMID |
-|--------|----------------|-----------------|------|
-[Include every trial from the provided "Verified Trial-Publication Links" context. Use only explicit results-linked references from ClinicalTrials.gov. Use markdown links for trial and publication URLs when available. If a trial has no results publication, include a row that says "No results-linked publication listed on ClinicalTrials.gov".]
-
 ## References
 [List of all papers and trials actually referenced in this brief. Each reference MUST use Author-Year format with a clickable markdown link using the URL from the **Citation Registry**:
 - For papers: Author(s), "Title", Journal (Year). [Link](url)
@@ -260,7 +255,6 @@ Format your output exactly as below. Use markdown tables where indicated.
 6. **ONLY** use citations from the Citation Registry — do NOT fabricate URLs or DOIs.
 7. If you cannot find a URL for a source, omit the link but still cite the author/year in parentheses (Author et al., Year).
 8. **NEVER** include internal citation IDs like [ct-1], [pm-2], [ss-3] in the output.
-9. **TRIAL-TO-PAPER PAIRING**: Never pair a trial with a publication unless that exact relationship appears in the verified trial-publication links context.
 
 Be comprehensive but concise. Bold critical terms and findings. Use actual data from the pipeline — do NOT fabricate numbers. If exact counts are unavailable, use approximate counts from the data provided. This brief should be useful to a biotech decision-maker."""
 
@@ -404,6 +398,108 @@ Format:
 Be specific and cite sources from the original brief. Do NOT fabricate data."""
 
 # ---------------------------------------------------------------------------
+# 11. PUBMED LINKER — NCT-to-publication matching (linking pipeline)
+# ---------------------------------------------------------------------------
+PUBMED_LINKER = """You are a clinical trial publication linking specialist. Given:
+1. An NCT ID and enriched trial metadata (title, condition, PI, dates)
+2. PubMed search results from structured (NCT ID in secondary-identifier) and heuristic (title/condition/PI) searches
+
+Your task is to RANK the candidate publications by likelihood of being the trial's results publication.
+
+Scoring criteria (assign a confidence score 0-100):
+- **Direct NCT match** (NCT ID appears in paper metadata or text): +50 points base
+- **Title overlap** (key phrases from trial title appear in paper title): +20 points
+- **Author/PI overlap** (trial PI appears as paper author): +15 points
+- **Condition match** (same disease/condition): +10 points
+- **Date proximity** (published within 2 years of trial completion): +10 points
+- **Publication type** (clinical trial, RCT, or results paper): +10 points
+
+Return ONLY a valid JSON array. Each item must have:
+- "pmid": string
+- "doi": string or ""
+- "title": string
+- "authors": string
+- "year": string
+- "confidence": integer (0-100)
+- "match_reason": string explaining why this is a match
+- "match_type": one of "direct_nct_link", "nct_in_text", "metadata_heuristic"
+
+Order by confidence descending. Include only candidates with confidence >= 30.
+Return an empty array [] if no credible matches exist."""
+
+# ---------------------------------------------------------------------------
+# 12. FULL-TEXT DATA EXTRACTOR — data availability extraction (linking pipeline)
+# ---------------------------------------------------------------------------
+FULLTEXT_EXTRACTOR = """You are a data availability specialist. Given the full text (or abstract) of a clinical trial publication and extracted data-availability information, your task is to:
+
+1. **Identify data sharing statements**: Look for explicit mentions of data sharing, data availability, or supplementary materials.
+2. **Extract repository links**: Identify any URLs or mentions of data repositories (Dryad, Figshare, Zenodo, Vivli, dbGaP, GEO, etc.).
+3. **Classify data availability**:
+   - "open_access": Data freely downloadable
+   - "on_request": Data available upon reasonable request
+   - "restricted": Data behind institutional access or review board
+   - "not_available": Explicitly states data not shared
+   - "not_stated": No data availability statement found
+
+Return ONLY a valid JSON object with:
+- "availability_type": one of the categories above
+- "statement_snippet": the relevant text snippet (max 200 chars)
+- "repository_urls": list of URLs to data repositories
+- "repository_names": list of repository names mentioned
+- "supplementary_urls": list of URLs to supplementary materials
+- "notes": any additional relevant context (max 100 chars)
+
+Be precise — only extract what is explicitly stated. Do NOT infer or fabricate URLs."""
+
+# ---------------------------------------------------------------------------
+# 13. LINK VALIDATOR — final aggregation and confidence scoring (linking pipeline)
+# ---------------------------------------------------------------------------
+LINK_VALIDATOR = """You are a clinical trial publication linking validator. Given per-trial linking results (registry metadata, PubMed matches, full-text extractions, repository hits), produce a final validated summary.
+
+For each trial (NCT ID), you must:
+1. **Deduplicate** publications that appear in multiple sources
+2. **Assign confidence tiers**:
+   - "high": Direct registry→PubMed link OR NCT ID found in paper full text
+   - "medium": Strong metadata match (title + PI + date overlap, confidence >= 60)
+   - "low": Heuristic match only (title/condition similarity, confidence < 60)
+3. **Associate datasets**: Link any repository hits to the correct trial/publication pair
+4. **Flag gaps**: Note trials with no publications found
+
+Return ONLY a valid JSON object with this schema:
+{
+  "trial_links": [
+    {
+      "nct_id": "NCT...",
+      "trial_title": "...",
+      "trial_url": "https://clinicaltrials.gov/study/NCT...",
+      "publications": [
+        {
+          "pmid": "...",
+          "title": "...",
+          "authors": "...",
+          "year": "...",
+          "url": "...",
+          "confidence_tier": "high|medium|low",
+          "confidence_score": 85,
+          "match_reason": "..."
+        }
+      ],
+      "datasets": [
+        {
+          "source": "Zenodo|Vivli|...",
+          "url": "...",
+          "title": "...",
+          "availability_type": "open_access|on_request|..."
+        }
+      ],
+      "data_availability": "Summary of data sharing status"
+    }
+  ],
+  "summary": "Overall summary of linking results"
+}"""
+
+
+# ---------------------------------------------------------------------------
 # Convenience dict — agents can look up prompts by role key
 # ---------------------------------------------------------------------------
 BIOTECH_PROMPTS: dict[str, str] = {
@@ -421,4 +517,7 @@ BIOTECH_PROMPTS: dict[str, str] = {
     "followup_skeptic": FOLLOW_UP_SKEPTIC,
     "followup_mediator": FOLLOW_UP_MEDIATOR,
     "followup_synthesizer": FOLLOW_UP_SYNTHESIZER,
+    "pubmed_linker": PUBMED_LINKER,
+    "fulltext_extractor": FULLTEXT_EXTRACTOR,
+    "link_validator": LINK_VALIDATOR,
 }

@@ -638,7 +638,7 @@ export default function Home() {
               <AgentStream messages={messages} isDone={!isStreaming && messages.length > 0} error={""} />
               {brief && <ReportView brief={brief} target={activeTarget} citations={citations} />}
               {brief && !isStreaming && (
-                <FollowUpBar brief={brief} target={activeTarget} />
+                <FollowUpBar brief={brief} target={activeTarget} citations={citations} />
               )}
 
               {/* Empty state for past sessions that had no data */}

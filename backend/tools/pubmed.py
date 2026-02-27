@@ -170,3 +170,86 @@ def _parse_pubmed_xml(xml_text: str, total_count: str, target: str) -> tuple[str
         })
 
     return summary, citations
+
+
+# ---------------------------------------------------------------------------
+# NCT-specific search helpers (used by the linking pipeline)
+# ---------------------------------------------------------------------------
+
+def search_by_nct(nct_id: str, max_results: int = 10) -> tuple[str, list[dict]]:
+    """
+    Search PubMed for publications linked to a specific NCT ID.
+
+    Uses the secondary-identifier field tag ``[si]`` for high-precision
+    matches, then falls back to free-text search.
+
+    Args:
+        nct_id: Clinical trial NCT ID (e.g. "NCT01234567").
+        max_results: Maximum number of papers.
+
+    Returns:
+        Tuple of (formatted markdown, list of citation dicts).
+    """
+    if not nct_id:
+        return "No NCT ID provided.", []
+
+    # High-precision: secondary identifier field
+    query = f'"{nct_id}"[si] OR "{nct_id}"'
+    return fetch_papers(query, max_results=max_results)
+
+
+def search_by_trial_metadata(
+    title: str = "",
+    condition: str = "",
+    pi_name: str = "",
+    completion_year: str = "",
+    max_results: int = 8,
+) -> tuple[str, list[dict]]:
+    """
+    Heuristic PubMed search using trial metadata when no direct NCT link exists.
+
+    Combines fragments of the trial title, condition, and PI surname,
+    filtered by clinical-trial publication type and date window.
+
+    Args:
+        title: Trial title (will be split into key phrases).
+        condition: Disease/condition name.
+        pi_name: PI last name.
+        completion_year: Trial completion year for date filtering.
+        max_results: Maximum papers to return.
+
+    Returns:
+        Tuple of (formatted markdown, list of citation dicts).
+    """
+    parts: list[str] = []
+
+    if title:
+        # Take first few significant words from the title
+        words = [w for w in title.split() if len(w) > 3][:6]
+        if words:
+            title_phrase = " ".join(words)
+            parts.append(f'"{title_phrase}"')
+
+    if condition:
+        parts.append(f'"{condition}"')
+
+    if pi_name:
+        # Extract last name if full name given
+        surname = pi_name.strip().split()[-1] if pi_name.strip() else ""
+        if surname and len(surname) > 2:
+            parts.append(f"{surname}[Author]")
+
+    if not parts:
+        return "Insufficient metadata for heuristic search.", []
+
+    query = " AND ".join(parts)
+
+    # Add clinical trial filter
+    query += ' AND ("clinical trial"[pt] OR "randomized controlled trial"[pt])'
+
+    # Add date filter if we have a completion year
+    if completion_year and completion_year.isdigit():
+        year = int(completion_year)
+        query += f" AND {year - 2}:{year + 2}[dp]"
+
+    return fetch_papers(query, max_results=max_results)

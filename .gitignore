@@ -21,5 +21,8 @@ BAvenv/
 *.swo
 .DS_Store
 
+# Misc
+AgentPublicationLinking.md
+
 # Denario submodule (reference only)
 # Denario/
